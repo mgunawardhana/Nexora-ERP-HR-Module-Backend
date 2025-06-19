@@ -92,6 +92,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .role(registrationRequest.getRole())
                     .build();
 
+
+            //TODO: address and nic are not saving
+
             log.info("Processing registration for user: {}", user.getEmail());
 
             User savedUser = userRepository.save(user);
@@ -134,7 +137,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 throw new RuntimeException("Failed to save authentication token", e);
             }
 
-            return AuthenticationResponse.builder().accessToken(accessToken).refreshToken(refreshToken).build();
+            return AuthenticationResponse.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .userName(savedUser.getFirstName())
+                    .role(String.valueOf(savedUser.getRole()))
+                    .build();
+
         } catch (Exception e) {
             log.error("Registration failed: {}", e.getMessage());
             throw new RuntimeException("Registration failed", e);
