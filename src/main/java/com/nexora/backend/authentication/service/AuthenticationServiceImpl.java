@@ -1,12 +1,15 @@
 package com.nexora.backend.authentication.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nexora.backend.authentication.repository.EmployeeDetailsRepository;
 import com.nexora.backend.authentication.repository.UserRepository;
 import com.nexora.backend.authentication.service.impl.AuthenticationService;
 import com.nexora.backend.constant.SqlQuery;
+import com.nexora.backend.domain.entity.EmployeeDetails;
 import com.nexora.backend.domain.entity.User;
-import com.nexora.backend.domain.enums.Role;
+import com.nexora.backend.domain.enums.EmploymentStatus;
 import com.nexora.backend.domain.enums.TokenType;
+import com.nexora.backend.domain.enums.WorkMode;
 import com.nexora.backend.domain.request.AuthenticationRequest;
 import com.nexora.backend.domain.request.RegistrationRequest;
 import com.nexora.backend.domain.response.APIResponse;
@@ -32,6 +35,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +66,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @NonNull
     private final AuthenticationManager authenticationManager;
 
+    @NonNull
+    private final EmployeeDetailsRepository employeeDetailsRepository;
+
 
     @NonNull
     private final ResponseUtil responseUtil;
@@ -79,62 +88,106 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
-    @Override
+    /**
+     * Registers a new user and their associated employee details into the system.
+     * <p>
+     * This method performs the following operations:
+     * <ul>
+     *     <li>Creates and saves a new {@link User} entity based on the provided {@link RegistrationRequest}.</li>
+     *     <li>Initializes and saves an {@link EmployeeDetails} record tied to the saved user, filling defaults where applicable.</li>
+     *     <li>Generates access and refresh JWT tokens for the user.</li>
+     *     <li>Attempts to save the generated token to the database using {@code writeJdbcTemplate}.</li>
+     * </ul>
+     * <p>
+     * All operations are wrapped in a transactional context to ensure atomicity. If any part of the process fails, the transaction will roll back.
+     *
+     * @param registrationRequest the registration request payload containing user and employee details.
+     * @return an {@link AuthenticationResponse} containing access token, refresh token, username, and role information.
+     * @throws RuntimeException if any part of the registration or token-saving process fails.
+     */
     @Transactional
     public AuthenticationResponse register(RegistrationRequest registrationRequest) {
         try {
-            var user = User.builder()
+            User user = User.builder()
                     .firstName(registrationRequest.getFirstName())
                     .lastName(registrationRequest.getLastName())
                     .email(registrationRequest.getEmail())
                     .password(passwordEncoder.encode(registrationRequest.getPassword()))
-                    .userProfilePic(registrationRequest.getDriverProfilePicture())
                     .role(registrationRequest.getRole())
                     .build();
-
-
-            //TODO: address and nic are not saving
 
             log.info("Processing registration for user: {}", user.getEmail());
 
             User savedUser = userRepository.save(user);
+            log.debug("Saved user with ID: {}", savedUser.getId());
 
-            try {
-                if (savedUser.getRole().equals(Role.USER)) {
-                    log.info("New User profile created successfully");
-                } else if (savedUser.getRole().equals(Role.SYSTEM_ADMIN)) {
-                    log.info("New System Admin profile created successfully");
-                } else if (savedUser.getRole().equals(Role.HR_MANAGER)) {
-                    log.info("New HR Manager profile created successfully");
-                } else if (savedUser.getRole().equals(Role.DEPARTMENT_MANAGER)) {
-                    log.info("New Department Manager profile created successfully");
-                } else if (savedUser.getRole().equals(Role.EMPLOYEE)) {
-                    log.info("New Employee profile created successfully");
-                } else if (savedUser.getRole().equals(Role.TEAM_LEAD)) {
-                    log.info("New Team Lead profile created successfully");
-                } else if (savedUser.getRole().equals(Role.INTERN)) {
-                    log.info("New Intern profile created successfully");
-                } else if (savedUser.getRole().equals(Role.HR_ASSISTANT)) {
-                    log.info("New HR Assistant profile created successfully");
-                } else if (savedUser.getRole().equals(Role.FINANCE_OFFICER)) {
-                    log.info("New Finance Officer profile created successfully");
-                } else if (savedUser.getRole().equals(Role.CONTRACT_WORKER)) {
-                    log.info("New Contract Worker profile created successfully");
-                }
-            } catch (Exception e) {
-                log.error("Error creating profile for user {}: {}", savedUser.getEmail(), e.getMessage());
-                throw new RuntimeException("Failed to create user profile", e);
-            }
+            EmployeeDetails employeeDetails = EmployeeDetails.builder()
+                    .user(savedUser)
+                    .employeeCode(registrationRequest.getEmployeeCode() != null ? registrationRequest.getEmployeeCode() : "EMP" + System.currentTimeMillis())
+                    .department(registrationRequest.getDepartment() != null ? registrationRequest.getDepartment() : "Unassigned")
+                    .designation(registrationRequest.getDesignation() != null ? registrationRequest.getDesignation() : "New Hire")
+                    .joinDate(registrationRequest.getJoinDate() != null ? registrationRequest.getJoinDate() : LocalDate.now())
+                    .currentSalary(registrationRequest.getCurrentSalary() != null ? registrationRequest.getCurrentSalary() : new BigDecimal("0.01"))
+                    .phoneNumber(registrationRequest.getPhoneNumber() != null ? registrationRequest.getPhoneNumber() : "N/A")
+                    .address(registrationRequest.getAddress() != null ? registrationRequest.getAddress() : "N/A")
+                    .emergencyContactName(registrationRequest.getEmergencyContactName() != null ? registrationRequest.getEmergencyContactName() : "N/A")
+                    .emergencyContactPhone(registrationRequest.getEmergencyContactPhone() != null ? registrationRequest.getEmergencyContactPhone() : "N/A")
+                    .dateOfBirth(registrationRequest.getDateOfBirth() != null ? registrationRequest.getDateOfBirth() : LocalDate.of(2000, 1, 1))
+                    .nationalId(registrationRequest.getNationalId() != null ? registrationRequest.getNationalId() : "N/A")
+                    .bankAccountNumber(registrationRequest.getBankAccountNumber() != null ? registrationRequest.getBankAccountNumber() : "N/A")
+                    .bankName(registrationRequest.getBankName() != null ? registrationRequest.getBankName() : "N/A")
+                    .taxId(registrationRequest.getTaxId() != null ? registrationRequest.getTaxId() : "N/A")
+                    .managerId(registrationRequest.getManagerId() != null ? registrationRequest.getManagerId() : 0)
+                    .teamSize(registrationRequest.getTeamSize() != null ? registrationRequest.getTeamSize() : 0)
+                    .specialization(registrationRequest.getSpecialization() != null ? registrationRequest.getSpecialization() : "N/A")
+                    .contractStartDate(registrationRequest.getContractStartDate() != null ? registrationRequest.getContractStartDate() : LocalDate.now())
+                    .contractEndDate(registrationRequest.getContractEndDate() != null ? registrationRequest.getContractEndDate() : LocalDate.now().plusYears(1))
+                    .hourlyRate(registrationRequest.getHourlyRate() != null ? registrationRequest.getHourlyRate() : new BigDecimal("0.00"))
+                    .certifications(registrationRequest.getCertifications() != null ? registrationRequest.getCertifications() : "None")
+                    .educationLevel(registrationRequest.getEducationLevel() != null ? registrationRequest.getEducationLevel() : "N/A")
+                    .university(registrationRequest.getUniversity() != null ? registrationRequest.getUniversity() : "N/A")
+                    .graduationYear(registrationRequest.getGraduationYear() != null ? registrationRequest.getGraduationYear() : 0)
+                    .previousExperienceYears(registrationRequest.getPreviousExperienceYears() != null ? registrationRequest.getPreviousExperienceYears() : 0)
+                    .employmentStatus(registrationRequest.getEmploymentStatus() != null ? registrationRequest.getEmploymentStatus() : EmploymentStatus.PROBATION)
+                    .probationEndDate(registrationRequest.getProbationEndDate() != null ? registrationRequest.getProbationEndDate() : LocalDate.now().plusMonths(3))
+                    .shiftTimings(registrationRequest.getShiftTimings() != null ? registrationRequest.getShiftTimings() : "9:00-17:00")
+                    .accessLevel(registrationRequest.getAccessLevel() != null ? registrationRequest.getAccessLevel() : "BASIC")
+                    .budgetAuthority(registrationRequest.getBudgetAuthority() != null ? registrationRequest.getBudgetAuthority() : new BigDecimal("0.00"))
+                    .salesTarget(registrationRequest.getSalesTarget() != null ? registrationRequest.getSalesTarget() : new BigDecimal("0.00"))
+                    .commissionRate(registrationRequest.getCommissionRate() != null ? registrationRequest.getCommissionRate() : new BigDecimal("0.00"))
+                    .internDurationMonths(registrationRequest.getInternDurationMonths() != null ? registrationRequest.getInternDurationMonths() : 0)
+                    .mentorId(registrationRequest.getMentorId() != null ? registrationRequest.getMentorId() : 0)
+                    .officeLocation(registrationRequest.getOfficeLocation() != null ? registrationRequest.getOfficeLocation() : "Main Office")
+                    .workMode(registrationRequest.getWorkMode() != null ? registrationRequest.getWorkMode() : WorkMode.OFFICE)
+                    .notes(registrationRequest.getNotes() != null ? registrationRequest.getNotes() : "")
+                    .build();
 
+            log.info("Saving employee details for user: {}", savedUser.getEmail());
+
+            employeeDetailsRepository.save(employeeDetails);
+            log.debug("Saved employee details for user ID: {}", savedUser.getId());
+
+            // Generating tokens
             String accessToken = jwtServiceImpl.generateToken(savedUser);
             String refreshToken = jwtServiceImpl.generateRefreshToken(savedUser);
 
             try {
-                writeJdbcTemplate.update(SqlQuery.InsertQuery.INSERT_TOKEN, accessToken, TokenType.BEARER.name(), Boolean.FALSE, Boolean.FALSE, savedUser.getId());
+                log.debug("Attempting to save token for user ID: {} with token: {}", savedUser.getId(), accessToken);
+                writeJdbcTemplate.update(
+                        SqlQuery.InsertQuery.INSERT_TOKEN,
+                        accessToken,
+                        TokenType.BEARER.name(),
+                        false,
+                        false,
+                        savedUser.getId()
+                );
                 log.info("Token saved successfully for user: {}", savedUser.getEmail());
             } catch (Exception e) {
-                log.error("Error saving token for user {}: {}", savedUser.getEmail(), e.getMessage());
-                throw new RuntimeException("Failed to save authentication token", e);
+                log.error("Failed to save token for user {}: {}", savedUser.getEmail(), e.getMessage(), e);
+                if (e.getCause() instanceof SQLException sqlEx) {
+                    log.error("SQL Error Code: {}, SQL State: {}", sqlEx.getErrorCode(), sqlEx.getSQLState());
+                }
+                throw new RuntimeException("Failed to save authentication token: " + e.getMessage(), e);
             }
 
             return AuthenticationResponse.builder()
@@ -145,8 +198,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .build();
 
         } catch (Exception e) {
-            log.error("Registration failed: {}", e.getMessage());
-            throw new RuntimeException("Registration failed", e);
+            log.error("Registration failed for user {}: {}", registrationRequest.getEmail(), e.getMessage(), e);
+            throw new RuntimeException("Registration failed: " + e.getMessage(), e);
         }
     }
 
@@ -162,7 +215,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         var refreshToken = jwtServiceImpl.generateRefreshToken(user);
 
         try {
-            int updatedRows = writeJdbcTemplate.update("UPDATE token SET token = ?, revoked = ?, expired = ? WHERE user_id = ? AND revoked = false", accessToken, Boolean.FALSE, Boolean.FALSE, user.getId());
+            int updatedRows = writeJdbcTemplate.update(SqlQuery.InsertQuery.INVOKE_REVOKE_ALL_USER_TOKENS, accessToken, Boolean.FALSE, Boolean.FALSE, user.getId());
 
             if (updatedRows == 0) {
                 writeJdbcTemplate.update(SqlQuery.InsertQuery.INSERT_TOKEN, accessToken, TokenType.BEARER.name(), Boolean.FALSE, Boolean.FALSE, user.getId());

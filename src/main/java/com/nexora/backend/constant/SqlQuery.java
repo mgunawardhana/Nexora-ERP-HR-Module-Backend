@@ -23,50 +23,7 @@ public class SqlQuery {
 
         public static final String INSERT_TOKEN = "INSERT INTO token (token, token_type, revoked, expired, user_id)\n" + "VALUES (?, ?, ?, ?, ?);\n";
 
-        public static final String INSERT_ARTICLE = """
-                INSERT INTO _article ( discount, title, description, author, media, is_active ) VALUES (?, ?, ?, ?, ?, ?);""";
-
-        public static final String ADD_NEW_GUIDELINE = """
-                INSERT INTO guideline (title, description, category, priority, related_to) VALUES (?, ?, ?, ?, ?)""";
-
-        public static final String ADD_NEW_VEHICLE = """
-                    INSERT INTO vehicle (
-                        registration_number, vehicle_image, make, model, year_of_manufacture, 
-                        color, fuel_type, engine_capacity, chassis_number, vehicle_type, 
-                        owner_name, owner_contact, owner_address, insurance_provider, 
-                        insurance_policy_number, insurance_expiry_date, seating_capacity, 
-                        license_plate_number, permit_type, air_conditioning, additional_features, status
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-                """;
-
-        public static final String ADD_NEW_DRIVER = """
-                    INSERT INTO driver (root_user_id, driver_nic, phone_number, 
-                                        license_number, license_expiry_date, driver_address, 
-                                        vehicle_assigned, driver_status, emergency_contact, 
-                                        date_of_birth, date_of_joining, license_image_front, license_image_back) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """;
-
-
-        public static final String ADD_NEW_CUSTOMER = """
-                INSERT INTO customer (root_user_id, address, nic, phone_number) VALUES (?, ?, ?, ?)""";
-
-        public static final String ADD_NEW_MANAGER = """
-                INSERT INTO manager (root_user_id, address, nic, phone_number) VALUES (?, ?, ?, ?)""";
-
-        public static final String ADD_NEW_BOOKING = """
-                INSERT INTO booking (booking_date, pickup_location, drop_off_location, 
-                car_number, taxes, distance, estimatedTime, tax_without_cost, total_amount, 
-                customer_registration_number, driver_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""";
-
-        public static final String UPDATE_VEHICLE_STATUS = "UPDATE vehicle SET status = 'UNAVAILABLE' WHERE id = CAST(? AS INTEGER)";
-
-        public static final String VALIDATE_BOOKING = """
-                SELECT COUNT(*)
-                FROM booking
-                WHERE car_number = ?
-                AND ? < (booking_date + (estimatedTime * INTERVAL '1 minute'))
-                """;
+        public static final String INVOKE_REVOKE_ALL_USER_TOKENS = "UPDATE token SET token = ?, revoked = ?, expired = ? WHERE user_id = ? AND revoked = false";
 
         private InsertQuery() {
         }

@@ -7,5 +7,6 @@ public enum EmploymentStatus {
     NOTICE_PERIOD,
     TERMINATED,
     RESIGNED,
-    ON_LEAVE
+    ON_LEAVE,
+    PERMANENT
 }
