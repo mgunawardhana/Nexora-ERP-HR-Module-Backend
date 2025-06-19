@@ -1,4 +1,4 @@
-package com.nexora.backend.authentication.service;
+package com.nexora.backend.authentication.service.impl;
 
 import com.nexora.backend.domain.entity.Token;
 import com.nexora.backend.domain.enums.TokenType;

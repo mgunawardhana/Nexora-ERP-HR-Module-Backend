@@ -1,6 +1,6 @@
-package com.nexora.backend.authentication.service;
+package com.nexora.backend.authentication.service.impl;
 
-import com.nexora.backend.authentication.service.impl.JwtService;
+import com.nexora.backend.authentication.service.JwtService;
 import com.nexora.backend.domain.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

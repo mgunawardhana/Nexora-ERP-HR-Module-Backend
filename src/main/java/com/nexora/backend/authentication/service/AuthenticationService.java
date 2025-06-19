@@ -1,4 +1,4 @@
-package com.nexora.backend.authentication.service.impl;
+package com.nexora.backend.authentication.service;
 
 import com.nexora.backend.domain.request.AuthenticationRequest;
 import com.nexora.backend.domain.request.RegistrationRequest;

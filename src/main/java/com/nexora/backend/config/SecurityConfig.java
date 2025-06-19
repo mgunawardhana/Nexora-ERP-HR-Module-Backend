@@ -41,13 +41,8 @@ public class SecurityConfig {
      */
     private static final String[] WHITE_LIST_URL = {
             "/api/v1/auth/**",
-            "api/v1/guideline/**",
-            "/api/v1/auth/register",
-            "/api/v1/web-content/public/**",
-            "/api/v1/booking/**",
-            "/api/v1/driver/fetch-all",
-            "/api/v1/vehicle/fetch-all/**",
-            "/api/v1/booking/filter/**"
+            "/api/v1/auth/register/**",
+            "/api/v1/attendance/**"
     };
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;

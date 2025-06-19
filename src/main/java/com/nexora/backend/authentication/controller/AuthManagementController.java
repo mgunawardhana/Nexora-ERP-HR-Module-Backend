@@ -1,6 +1,6 @@
 package com.nexora.backend.authentication.controller;
 
-import com.nexora.backend.authentication.service.impl.AuthenticationService;
+import com.nexora.backend.authentication.service.AuthenticationService;
 import com.nexora.backend.domain.request.AuthenticationRequest;
 import com.nexora.backend.domain.request.RegistrationRequest;
 import com.nexora.backend.domain.response.APIResponse;

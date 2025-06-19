@@ -1,9 +1,9 @@
-package com.nexora.backend.authentication.service;
+package com.nexora.backend.authentication.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexora.backend.authentication.repository.EmployeeDetailsRepository;
 import com.nexora.backend.authentication.repository.UserRepository;
-import com.nexora.backend.authentication.service.impl.AuthenticationService;
+import com.nexora.backend.authentication.service.AuthenticationService;
 import com.nexora.backend.constant.SqlQuery;
 import com.nexora.backend.domain.entity.EmployeeDetails;
 import com.nexora.backend.domain.entity.User;

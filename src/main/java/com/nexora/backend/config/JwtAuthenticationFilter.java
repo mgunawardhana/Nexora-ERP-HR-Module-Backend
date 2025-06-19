@@ -1,7 +1,7 @@
 package com.nexora.backend.config;
 
-import com.nexora.backend.authentication.service.JwtServiceImpl;
-import com.nexora.backend.authentication.service.TokenService;
+import com.nexora.backend.authentication.service.impl.JwtServiceImpl;
+import com.nexora.backend.authentication.service.impl.TokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

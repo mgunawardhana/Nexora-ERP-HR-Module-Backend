@@ -1,6 +1,5 @@
 package com.nexora.backend.authentication.service.impl;
 
-import com.nexora.backend.authentication.service.TokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;

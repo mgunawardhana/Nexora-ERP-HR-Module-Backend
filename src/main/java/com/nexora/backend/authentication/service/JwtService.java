@@ -1,4 +1,4 @@
-package com.nexora.backend.authentication.service.impl;
+package com.nexora.backend.authentication.service;
 
 import io.jsonwebtoken.Claims;
 import org.springframework.security.core.userdetails.UserDetails;
