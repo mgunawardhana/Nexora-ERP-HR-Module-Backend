@@ -1,6 +1,7 @@
-![face-recognition-personal-identification-collage-min](https://github.com/user-attachments/assets/505c1e88-f080-4e35-960e-9cb5f9ce0e72)
+![Flux_Schnell_A_hightech_futuristic_scene_showing_a_closeup_of__0 (1)](https://github.com/user-attachments/assets/4da29e8e-bffe-4cc0-9057-da2cb2cbc0d4)
 
 <div align="center">
+
 
 [![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=mgunawardhana_Mega-City-Cab-Service-Backend)
 
