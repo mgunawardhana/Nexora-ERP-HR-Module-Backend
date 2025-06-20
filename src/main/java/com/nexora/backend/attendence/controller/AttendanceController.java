@@ -1,6 +1,5 @@
 package com.nexora.backend.attendence.controller;
 
-
 import com.nexora.backend.attendence.service.AttendanceService;
 import com.nexora.backend.domain.request.AttendanceRequest;
 import com.nexora.backend.domain.response.APIResponse;
@@ -22,10 +21,7 @@ public class AttendanceController {
 
     @PostMapping("/mark-attendance")
     public ResponseEntity<APIResponse> markAttendance(@RequestBody AttendanceRequest attendanceRequest) {
-        log.error("markAttendance {}", attendanceRequest);
         log.info("Marking attendance for user: {}", attendanceRequest.getUserId());
         return attendanceService.markDailyAttendance(attendanceRequest);
     }
-
-
 }

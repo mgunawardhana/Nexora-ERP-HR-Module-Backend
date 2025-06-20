@@ -1,6 +1,5 @@
 package com.nexora.backend.domain.request;
 
-import com.nexora.backend.domain.enums.AttendanceStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,7 +19,7 @@ public class AttendanceRequest {
 
     private LocalDate attendanceDate;
 
-    private AttendanceStatus attendanceStatus;
+    private String attendanceStatus;
 
     private LocalDateTime checkInTime;
 
