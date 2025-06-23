@@ -293,6 +293,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public ResponseEntity<APIResponse> getAllAuthentications(int page, int size) {
+        // Ensure page is 0-indexed for Spring Data JPA
         Pageable pageable = PageRequest.of(page, size);
         Page<User> usersPage = userRepository.findAll(pageable);
 
@@ -304,10 +305,68 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             userDetails.put("email", user.getEmail());
             userDetails.put("role", user.getRole());
             userDetails.put("user_profile_pic", user.getUserProfilePic());
-            userDetails.put("password", passwordEncoder.encode(user.getPassword()));
+            // Do not expose encoded password in API response
+            // userDetails.put("password", passwordEncoder.encode(user.getPassword()));
+
+            // Fetch EmployeeDetails using the User object
+            EmployeeDetails employeeDetails = employeeDetailsRepository.findByUser(user).orElse(null);
+
+            if (employeeDetails != null) {
+                userDetails.put("employeeCode", employeeDetails.getEmployeeCode());
+                userDetails.put("department", employeeDetails.getDepartment());
+                userDetails.put("designation", employeeDetails.getDesignation());
+                userDetails.put("joinDate", employeeDetails.getJoinDate());
+                userDetails.put("currentSalary", employeeDetails.getCurrentSalary());
+                userDetails.put("phoneNumber", employeeDetails.getPhoneNumber());
+                userDetails.put("address", employeeDetails.getAddress());
+                userDetails.put("emergencyContactName", employeeDetails.getEmergencyContactName());
+                userDetails.put("emergencyContactPhone", employeeDetails.getEmergencyContactPhone());
+                userDetails.put("dateOfBirth", employeeDetails.getDateOfBirth());
+                userDetails.put("nationalId", employeeDetails.getNationalId());
+                userDetails.put("bankAccountNumber", employeeDetails.getBankAccountNumber());
+                userDetails.put("bankName", employeeDetails.getBankName());
+                userDetails.put("taxId", employeeDetails.getTaxId());
+                userDetails.put("managerId", employeeDetails.getManagerId());
+                userDetails.put("teamSize", employeeDetails.getTeamSize());
+                userDetails.put("specialization", employeeDetails.getSpecialization());
+                userDetails.put("contractStartDate", employeeDetails.getContractStartDate());
+                userDetails.put("contractEndDate", employeeDetails.getContractEndDate());
+                userDetails.put("hourlyRate", employeeDetails.getHourlyRate());
+                userDetails.put("certifications", employeeDetails.getCertifications());
+                userDetails.put("educationLevel", employeeDetails.getEducationLevel());
+                userDetails.put("university", employeeDetails.getUniversity());
+                userDetails.put("graduationYear", employeeDetails.getGraduationYear());
+                userDetails.put("previousExperienceYears", employeeDetails.getPreviousExperienceYears());
+                userDetails.put("employmentStatus", employeeDetails.getEmploymentStatus());
+                userDetails.put("probationEndDate", employeeDetails.getProbationEndDate());
+                userDetails.put("shiftTimings", employeeDetails.getShiftTimings());
+                userDetails.put("accessLevel", employeeDetails.getAccessLevel());
+                userDetails.put("budgetAuthority", employeeDetails.getBudgetAuthority());
+                userDetails.put("salesTarget", employeeDetails.getSalesTarget());
+                userDetails.put("commissionRate", employeeDetails.getCommissionRate());
+                userDetails.put("internDurationMonths", employeeDetails.getInternDurationMonths());
+                userDetails.put("mentorId", employeeDetails.getMentorId());
+                userDetails.put("officeLocation", employeeDetails.getOfficeLocation());
+                userDetails.put("workMode", employeeDetails.getWorkMode());
+                userDetails.put("notes", employeeDetails.getNotes());
+                userDetails.put("createdAt", employeeDetails.getCreatedAt());
+                userDetails.put("updatedAt", employeeDetails.getUpdatedAt());
+            }
             return userDetails;
         }).toList();
 
-        return responseUtil.wrapSuccess(userDetailsList, HttpStatus.OK);
+        // Create response with pagination metadata
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", userDetailsList);
+        response.put("totalElements", usersPage.getTotalElements());
+        response.put("totalPages", usersPage.getTotalPages());
+        response.put("currentPage", usersPage.getNumber());
+        response.put("pageSize", usersPage.getSize());
+        response.put("numberOfElements", usersPage.getNumberOfElements());
+        response.put("first", usersPage.isFirst());
+        response.put("last", usersPage.isLast());
+        response.put("empty", usersPage.isEmpty());
+
+        return responseUtil.wrapSuccess(response, HttpStatus.OK);
     }
 }
