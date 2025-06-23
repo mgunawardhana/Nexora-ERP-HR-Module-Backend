@@ -21,8 +21,19 @@ public class AnalyticsController {
 
     private final EmployeeDetailsService employeeDetailsService;
 
+
     @GetMapping("/role-count")
     public ResponseEntity<Map<String, Long>> getEmployeeCountByRole() {
         return ResponseEntity.ok(employeeDetailsService.getEmployeeCountByRole());
+    }
+
+    @GetMapping("/role-by-office-location")
+    public ResponseEntity<Map<String, Map<String, Long>>> getEmployeeCountByRoleAndOfficeLocation() {
+        return ResponseEntity.ok(employeeDetailsService.getEmployeeCountByRoleAndOfficeLocation());
+    }
+
+    @GetMapping("/role-by-employment-status")
+    public ResponseEntity<Map<String, Map<String, Long>>> getEmployeeCountByRoleAndEmploymentStatus() {
+        return ResponseEntity.ok(employeeDetailsService.getEmployeeCountByRoleAndEmploymentStatus());
     }
 }
