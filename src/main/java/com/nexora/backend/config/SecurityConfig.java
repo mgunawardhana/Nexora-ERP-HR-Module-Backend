@@ -43,7 +43,8 @@ public class SecurityConfig {
             "/api/v1/auth/**",
             "/api/v1/auth/register/**",
             "/api/v1/attendance/**",
-            "/api/v1/analytics/**"
+            "/api/v1/analytics/**",
+            "/api/gemini/**"
     };
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;

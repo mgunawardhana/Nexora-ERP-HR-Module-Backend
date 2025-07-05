@@ -33,7 +33,6 @@ public class Attendance {
     private LocalDate attendanceDate = LocalDate.now();
 
     @Column(name = "status", nullable = false)
-//    @Enumerated(EnumType.STRING)
     @NotNull(message = "Attendance status is mandatory")
     private String status = "PRESENT";
 
