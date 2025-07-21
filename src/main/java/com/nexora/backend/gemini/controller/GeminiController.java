@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -27,20 +28,27 @@ public class GeminiController {
         String sessionId = UUID.randomUUID().toString();
         log.info("Received request to generate content with prompt: {}, sessionId: {}", request.getPrompt(), sessionId);
 
-        Mono<ResponseEntity<GeminiResponse>> errorGeneratingContent = geminiService.generateContent(request.getPrompt(), request.getOptions())
+        return geminiService.generateContent(request.getPrompt(), request.getOptions())
                 .map(content -> {
-                    geminiRepository.saveLog(sessionId, request.getPrompt(), content);
-                    GeminiResponse response = new GeminiResponse(true, content, null);
-                    return ResponseEntity.ok(response);
+                    if (content.startsWith("Error:") || content.startsWith("The AI service") ||
+                            content.startsWith("Unable to connect") || content.startsWith("Too many requests") ||
+                            content.startsWith("Authentication failed") || content.startsWith("Access denied")) {
+
+                        log.warn("API returned error response: {}", content);
+                        GeminiResponse response = new GeminiResponse(false, content, null);
+                        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
+                    } else {
+                        geminiRepository.saveLog(sessionId, request.getPrompt(), content);
+                        GeminiResponse response = new GeminiResponse(true, content, null);
+                        return ResponseEntity.ok(response);
+                    }
                 })
                 .onErrorResume(error -> {
-                    log.error("Error generating content", error);
-                    GeminiResponse response = new GeminiResponse(false, null, error.getMessage());
-                    return Mono.just(ResponseEntity.internalServerError().body(response));
+                    log.error("Unexpected error generating content for session {}", sessionId, error);
+                    GeminiResponse response = new GeminiResponse(false, null,
+                            "An unexpected error occurred. Please try again later.");
+                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response));
                 });
-
-        log.warn(errorGeneratingContent.toString());
-        return errorGeneratingContent;
     }
 
     @GetMapping("/generate-simple")
@@ -51,14 +59,54 @@ public class GeminiController {
 
         return geminiService.generateContent(prompt)
                 .map(content -> {
-                    geminiRepository.saveLog(sessionId, prompt, content);
-                    GeminiResponse response = new GeminiResponse(true, content, null);
-                    return ResponseEntity.ok(response);
+                    if (content.startsWith("Error:") || content.startsWith("The AI service") ||
+                            content.startsWith("Unable to connect") || content.startsWith("Too many requests") ||
+                            content.startsWith("Authentication failed") || content.startsWith("Access denied")) {
+
+                        log.warn("API returned error response: {}", content);
+                        GeminiResponse response = new GeminiResponse(false, content, null);
+                        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
+                    } else {
+                        geminiRepository.saveLog(sessionId, prompt, content);
+                        GeminiResponse response = new GeminiResponse(true, content, null);
+                        return ResponseEntity.ok(response);
+                    }
                 })
                 .onErrorResume(error -> {
-                    log.error("Error generating content", error);
-                    GeminiResponse response = new GeminiResponse(false, null, error.getMessage());
-                    return Mono.just(ResponseEntity.internalServerError().body(response));
+                    log.error("Unexpected error generating content for session {}", sessionId, error);
+                    GeminiResponse response = new GeminiResponse(false, null,
+                            "An unexpected error occurred. Please try again later.");
+                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response));
+                });
+    }
+
+    @PostMapping("/hr-evaluation")
+    public Mono<ResponseEntity<GeminiResponse>> generateHrEvaluation(
+            @Valid @RequestBody java.util.Map<String, Object> employeeData) {
+        String sessionId = UUID.randomUUID().toString();
+        log.info("Received HR evaluation request for employee: {}, sessionId: {}",
+                employeeData.get("employeeName"), sessionId);
+
+        return geminiService.generateHrEvaluation(employeeData)
+                .map(content -> {
+                    if (content.startsWith("Error:") || content.startsWith("The AI service") ||
+                            content.startsWith("Unable to connect") || content.startsWith("Too many requests") ||
+                            content.startsWith("Authentication failed") || content.startsWith("Access denied")) {
+
+                        log.warn("HR evaluation API returned error response: {}", content);
+                        GeminiResponse response = new GeminiResponse(false, content, null);
+                        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
+                    } else {
+                        geminiRepository.saveLog(sessionId, "HR Evaluation for " + employeeData.get("employeeName"), content);
+                        GeminiResponse response = new GeminiResponse(true, content, null);
+                        return ResponseEntity.ok(response);
+                    }
+                })
+                .onErrorResume(error -> {
+                    log.error("Unexpected error generating HR evaluation for session {}", sessionId, error);
+                    GeminiResponse response = new GeminiResponse(false, null,
+                            "An unexpected error occurred while generating HR evaluation. Please try again later.");
+                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response));
                 });
     }
 }

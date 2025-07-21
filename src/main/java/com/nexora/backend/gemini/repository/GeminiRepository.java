@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
-@Repository // Add this annotation
+@Repository
 public class GeminiRepository {
 
     private static final int MAX_LOG_HISTORY = 1000;
