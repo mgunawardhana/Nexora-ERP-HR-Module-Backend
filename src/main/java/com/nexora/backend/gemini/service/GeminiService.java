@@ -164,6 +164,8 @@ public class GeminiService {
                             .bodyToMono(String.class)
                             .timeout(Duration.ofMillis(5000))
                             .map(response -> {
+
+                                log.error("Error while fetching employee data from: {}", response);
                                 try {
                                     // Parse the JSON response
                                     ObjectMapper mapper = new ObjectMapper();

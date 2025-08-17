@@ -23,7 +23,7 @@ public class EmployeeSuggestionsController {
     @NonNull
     private final EmployeeSuggestionService employeeSuggestionService;
 
-    @PostMapping("/save-employee-suggestion")
+    @PostMapping("/employee-suggestions")
     public ResponseEntity<APIResponse> saveEmployeeSuggestion(@Valid @RequestBody EmployeeSuggestionRequest request) {
         log.info("Received request to save employee suggestion: {}", request);
         return employeeSuggestionService.saveEmployeeSuggestion(request);

@@ -1,13 +1,7 @@
 package com.nexora.backend.domain.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -16,64 +10,54 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "employee_suggestions")
+@Table(name = "emp_suggetions") // Fixed: matches your table name exactly
 public class EmployeeSuggestion {
 
-    @jakarta.persistence.Id
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "first_name", nullable = false)
-    @NotBlank(message = "First name is mandatory")
+    @Column(name = "first_name", length = 100, columnDefinition = "VARCHAR(100) DEFAULT 'N/A'")
     private String firstName;
 
-    @Column(name = "last_name", nullable = false)
-    @NotBlank(message = "Last name is mandatory")
+    @Column(name = "last_name", length = 100, columnDefinition = "VARCHAR(100) DEFAULT 'N/A'")
     private String lastName;
 
-    @Column(name = "full_name", nullable = false)
-    @NotBlank(message = "Full name is mandatory")
+    @Column(name = "full_name", length = 200, nullable = false) // Fixed: added length constraint
     private String fullName;
 
-    @Column(name = "department")
+    @Column(name = "department", length = 100, columnDefinition = "VARCHAR(100) DEFAULT 'N/A'")
     private String department;
 
-    @Column(name = "employee_code")
+    @Column(name = "employee_code", length = 50, columnDefinition = "VARCHAR(50) DEFAULT 'N/A'")
     private String employeeCode;
 
-    @Column(name = "suggestion", columnDefinition = "TEXT", nullable = false)
-    @NotBlank(message = "Suggestion is mandatory")
+    @Column(name = "suggestion", columnDefinition = "TEXT")
     private String suggestion;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    @NotNull
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(name = "saved_at", nullable = false, updatable = false)
+    private LocalDateTime savedAt;
 
     @PrePersist
     protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
+        if (savedAt == null) {
+            savedAt = LocalDateTime.now();
         }
-        updatedAt = LocalDateTime.now();
 
+        // Handle fullName generation more robustly
         if (fullName == null || fullName.trim().isEmpty()) {
-            fullName = String.format("%s %s",
-                    firstName != null ? firstName.trim() : "",
-                    lastName != null ? lastName.trim() : "").trim();
+            String first = (firstName != null && !firstName.trim().isEmpty()) ? firstName.trim() : "";
+            String last = (lastName != null && !lastName.trim().isEmpty()) ? lastName.trim() : "";
 
-            if (fullName.isEmpty()) {
+            if (!first.isEmpty() && !last.isEmpty()) {
+                fullName = first + " " + last;
+            } else if (!first.isEmpty()) {
+                fullName = first;
+            } else if (!last.isEmpty()) {
+                fullName = last;
+            } else {
                 fullName = "N/A";
             }
         }
     }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
 }
