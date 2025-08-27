@@ -1,27 +1,26 @@
 package com.nexora.backend.model.controller;
 
-import com.nexora.backend.domain.entity.EmployeeDetails;
+import com.nexora.backend.domain.response.dto.PredictionResponse;
 import com.nexora.backend.model.service.ModelService;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
-import java.util.Optional;
-
-@CrossOrigin(origins = "*", allowedHeaders = "*")
-@Slf4j
 @RestController
-@RequestMapping("api/v1/model")
+@RequestMapping("/api/v1/model")
 @RequiredArgsConstructor
 public class ModelController {
 
-    @NonNull
     private final ModelService modelService;
 
-    @PostMapping("/find-by/{id}")
-    public Optional<EmployeeDetails> markAttendance(@PathVariable Integer id) {
-        log.info("Fetch Suggestions for user: {}", id);
-        return modelService.generateSuggestionRelatedToEmployee(String.valueOf(id));
+    @GetMapping("/predict/{id}")
+    public Mono<ResponseEntity<PredictionResponse>> getPrediction(@PathVariable Integer id) {
+        return modelService.getPredictionForEmployee(id)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 }
