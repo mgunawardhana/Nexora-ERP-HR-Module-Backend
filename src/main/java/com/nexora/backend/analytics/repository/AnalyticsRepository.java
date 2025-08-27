@@ -28,8 +28,8 @@ public interface AnalyticsRepository extends JpaRepository<EmployeeDetails, Long
     List<Object[]> findEmployeeCountByRoleAndOfficeLocation();
 
     @Query("SELECT u.id, u.firstName, u.lastName, u.role, " +
-            "e.department, e.joinDate, e.currentSalary, e.hourlyRate, " +
-            "e.educationLevel, e.previousExperienceYears, " +
+            "e.department, e.hourlyRate, " +
+            "e.educationField, e.totalWorkingYears, " +
             "a.attendanceDate, a.status, a.checkInTime, a.lunchOutTime, " +
             "a.lunchInTime, a.checkOutTime, a.dailyWorkingHours " +
             "FROM EmployeeDetails e " +

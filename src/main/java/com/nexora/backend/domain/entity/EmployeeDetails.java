@@ -1,5 +1,6 @@
 package com.nexora.backend.domain.entity;
 
+import com.nexora.backend.domain.enums.EmploymentStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -112,6 +113,14 @@ public class EmployeeDetails {
 
     @Column(name = "years_with_curr_manager")
     private Integer yearsWithCurrManager;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "employment_status")
+    private EmploymentStatus employmentStatus;
+
+    @Column(name = "office_location")
+    private String officeLocation;
+
 
     // Timestamps
     @Column(name = "created_at", nullable = false, updatable = false)

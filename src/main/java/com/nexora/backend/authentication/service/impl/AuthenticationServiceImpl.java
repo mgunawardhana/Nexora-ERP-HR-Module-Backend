@@ -7,9 +7,7 @@ import com.nexora.backend.authentication.service.AuthenticationService;
 import com.nexora.backend.constant.SqlQuery;
 import com.nexora.backend.domain.entity.EmployeeDetails;
 import com.nexora.backend.domain.entity.User;
-import com.nexora.backend.domain.enums.EmploymentStatus;
 import com.nexora.backend.domain.enums.TokenType;
-import com.nexora.backend.domain.enums.WorkMode;
 import com.nexora.backend.domain.request.AuthenticationRequest;
 import com.nexora.backend.domain.request.RegistrationRequest;
 import com.nexora.backend.domain.response.APIResponse;
@@ -88,23 +86,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
-    /**
-     * Registers a new user and their associated employee details into the system.
-     * <p>
-     * This method performs the following operations:
-     * <ul>
-     *     <li>Creates and saves a new {@link User} entity based on the provided {@link RegistrationRequest}.</li>
-     *     <li>Initializes and saves an {@link EmployeeDetails} record tied to the saved user, filling defaults where applicable.</li>
-     *     <li>Generates access and refresh JWT tokens for the user.</li>
-     *     <li>Attempts to save the generated token to the database using {@code writeJdbcTemplate}.</li>
-     * </ul>
-     * <p>
-     * All operations are wrapped in a transactional context to ensure atomicity. If any part of the process fails, the transaction will roll back.
-     *
-     * @param registrationRequest the registration request payload containing user and employee details.
-     * @return an {@link AuthenticationResponse} containing access token, refresh token, username, and role information.
-     * @throws RuntimeException if any part of the registration or token-saving process fails.
-     */
     @Transactional
     public AuthenticationResponse register(RegistrationRequest registrationRequest) {
         try {
@@ -123,43 +104,37 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             EmployeeDetails employeeDetails = EmployeeDetails.builder()
                     .user(savedUser)
-                    .employeeCode(registrationRequest.getEmployeeCode() != null ? registrationRequest.getEmployeeCode() : "EMP" + System.currentTimeMillis())
-                    .department(registrationRequest.getDepartment() != null ? registrationRequest.getDepartment() : "Unassigned")
-                    .designation(registrationRequest.getDesignation() != null ? registrationRequest.getDesignation() : "New Hire")
-                    .joinDate(registrationRequest.getJoinDate() != null ? registrationRequest.getJoinDate() : LocalDate.now())
-                    .currentSalary(registrationRequest.getCurrentSalary() != null ? registrationRequest.getCurrentSalary() : new BigDecimal("0.01"))
-                    .phoneNumber(registrationRequest.getPhoneNumber() != null ? registrationRequest.getPhoneNumber() : "N/A")
-                    .address(registrationRequest.getAddress() != null ? registrationRequest.getAddress() : "N/A")
-                    .emergencyContactName(registrationRequest.getEmergencyContactName() != null ? registrationRequest.getEmergencyContactName() : "N/A")
-                    .emergencyContactPhone(registrationRequest.getEmergencyContactPhone() != null ? registrationRequest.getEmergencyContactPhone() : "N/A")
-                    .dateOfBirth(registrationRequest.getDateOfBirth() != null ? registrationRequest.getDateOfBirth() : LocalDate.of(2000, 1, 1))
-                    .nationalId(registrationRequest.getNationalId() != null ? registrationRequest.getNationalId() : "N/A")
-                    .bankAccountNumber(registrationRequest.getBankAccountNumber() != null ? registrationRequest.getBankAccountNumber() : "N/A")
-                    .bankName(registrationRequest.getBankName() != null ? registrationRequest.getBankName() : "N/A")
-                    .taxId(registrationRequest.getTaxId() != null ? registrationRequest.getTaxId() : "N/A")
-                    .managerId(registrationRequest.getManagerId() != null ? registrationRequest.getManagerId() : 0)
-                    .teamSize(registrationRequest.getTeamSize() != null ? registrationRequest.getTeamSize() : 0)
-                    .specialization(registrationRequest.getSpecialization() != null ? registrationRequest.getSpecialization() : "N/A")
-                    .contractStartDate(registrationRequest.getContractStartDate() != null ? registrationRequest.getContractStartDate() : LocalDate.now())
-                    .contractEndDate(registrationRequest.getContractEndDate() != null ? registrationRequest.getContractEndDate() : LocalDate.now().plusYears(1))
-                    .hourlyRate(registrationRequest.getHourlyRate() != null ? registrationRequest.getHourlyRate() : new BigDecimal("0.00"))
-                    .certifications(registrationRequest.getCertifications() != null ? registrationRequest.getCertifications() : "None")
-                    .educationLevel(registrationRequest.getEducationLevel() != null ? registrationRequest.getEducationLevel() : "N/A")
-                    .university(registrationRequest.getUniversity() != null ? registrationRequest.getUniversity() : "N/A")
-                    .graduationYear(registrationRequest.getGraduationYear() != null ? registrationRequest.getGraduationYear() : 0)
-                    .previousExperienceYears(registrationRequest.getPreviousExperienceYears() != null ? registrationRequest.getPreviousExperienceYears() : 0)
-                    .employmentStatus(registrationRequest.getEmploymentStatus() != null ? registrationRequest.getEmploymentStatus() : EmploymentStatus.PROBATION)
-                    .probationEndDate(registrationRequest.getProbationEndDate() != null ? registrationRequest.getProbationEndDate() : LocalDate.now().plusMonths(3))
-                    .shiftTimings(registrationRequest.getShiftTimings() != null ? registrationRequest.getShiftTimings() : "9:00-17:00")
-                    .accessLevel(registrationRequest.getAccessLevel() != null ? registrationRequest.getAccessLevel() : "BASIC")
-                    .budgetAuthority(registrationRequest.getBudgetAuthority() != null ? registrationRequest.getBudgetAuthority() : new BigDecimal("0.00"))
-                    .salesTarget(registrationRequest.getSalesTarget() != null ? registrationRequest.getSalesTarget() : new BigDecimal("0.00"))
-                    .commissionRate(registrationRequest.getCommissionRate() != null ? registrationRequest.getCommissionRate() : new BigDecimal("0.00"))
-                    .internDurationMonths(registrationRequest.getInternDurationMonths() != null ? registrationRequest.getInternDurationMonths() : 0)
-                    .mentorId(registrationRequest.getMentorId() != null ? registrationRequest.getMentorId() : 0)
-                    .officeLocation(registrationRequest.getOfficeLocation() != null ? registrationRequest.getOfficeLocation() : "Main Office")
-                    .workMode(registrationRequest.getWorkMode() != null ? registrationRequest.getWorkMode() : WorkMode.OFFICE)
-                    .notes(registrationRequest.getNotes() != null ? registrationRequest.getNotes() : "")
+                    .employeeName(registrationRequest.getFirstName() + " " + registrationRequest.getLastName())
+                    .department(registrationRequest.getDepartment())
+                    .age(null)
+                    .businessTravel(null)
+                    .dailyRate(null)
+                    .distanceFromHome(null)
+                    .education(null)
+                    .educationField(registrationRequest.getEducationLevel())
+                    .environmentSatisfaction(null)
+                    .gender(null)
+                    .hourlyRate(registrationRequest.getHourlyRate())
+                    .jobInvolvement(null)
+                    .jobLevel(null)
+                    .jobRole(null)
+                    .jobSatisfaction(null)
+                    .maritalStatus(null)
+                    .monthlyIncome(null)
+                    .monthlyRate(null)
+                    .numCompaniesWorked(null)
+                    .overTime(null)
+                    .relationshipSatisfaction(null)
+                    .stockOptionLevel(null)
+                    .totalWorkingYears(registrationRequest.getPreviousExperienceYears())
+                    .trainingTimesLastYear(null)
+                    .workLifeBalance(null)
+                    .yearsAtCompany(null)
+                    .yearsInCurrentRole(null)
+                    .yearsSinceLastPromotion(null)
+                    .yearsWithCurrManager(null)
+                    .employmentStatus(registrationRequest.getEmploymentStatus())
+                    .officeLocation(registrationRequest.getOfficeLocation())
                     .build();
 
             log.info("Saving employee details for user: {}", savedUser.getEmail());
@@ -167,7 +142,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             employeeDetailsRepository.save(employeeDetails);
             log.debug("Saved employee details for user ID: {}", savedUser.getId());
 
-            // Generating tokens
             String accessToken = jwtServiceImpl.generateToken(savedUser);
             String refreshToken = jwtServiceImpl.generateRefreshToken(savedUser);
 
@@ -293,7 +267,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public ResponseEntity<APIResponse> getAllAuthentications(int page, int size) {
-        // Ensure page is 0-indexed for Spring Data JPA
         Pageable pageable = PageRequest.of(page, size);
         Page<User> usersPage = userRepository.findAll(pageable);
 
@@ -305,60 +278,47 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             userDetails.put("email", user.getEmail());
             userDetails.put("role", user.getRole());
             userDetails.put("user_profile_pic", user.getUserProfilePic());
-            // Do not expose encoded password in API response
-            // userDetails.put("password", passwordEncoder.encode(user.getPassword()));
 
-            // Fetch EmployeeDetails using the User object
             EmployeeDetails employeeDetails = employeeDetailsRepository.findByUser(user).orElse(null);
 
             if (employeeDetails != null) {
-                userDetails.put("employeeCode", employeeDetails.getEmployeeCode());
+                userDetails.put("employeeName", employeeDetails.getEmployeeName());
+                userDetails.put("age", employeeDetails.getAge());
+                userDetails.put("businessTravel", employeeDetails.getBusinessTravel());
+                userDetails.put("dailyRate", employeeDetails.getDailyRate());
                 userDetails.put("department", employeeDetails.getDepartment());
-                userDetails.put("designation", employeeDetails.getDesignation());
-                userDetails.put("joinDate", employeeDetails.getJoinDate());
-                userDetails.put("currentSalary", employeeDetails.getCurrentSalary());
-                userDetails.put("phoneNumber", employeeDetails.getPhoneNumber());
-                userDetails.put("address", employeeDetails.getAddress());
-                userDetails.put("emergencyContactName", employeeDetails.getEmergencyContactName());
-                userDetails.put("emergencyContactPhone", employeeDetails.getEmergencyContactPhone());
-                userDetails.put("dateOfBirth", employeeDetails.getDateOfBirth());
-                userDetails.put("nationalId", employeeDetails.getNationalId());
-                userDetails.put("bankAccountNumber", employeeDetails.getBankAccountNumber());
-                userDetails.put("bankName", employeeDetails.getBankName());
-                userDetails.put("taxId", employeeDetails.getTaxId());
-                userDetails.put("managerId", employeeDetails.getManagerId());
-                userDetails.put("teamSize", employeeDetails.getTeamSize());
-                userDetails.put("specialization", employeeDetails.getSpecialization());
-                userDetails.put("contractStartDate", employeeDetails.getContractStartDate());
-                userDetails.put("contractEndDate", employeeDetails.getContractEndDate());
+                userDetails.put("distanceFromHome", employeeDetails.getDistanceFromHome());
+                userDetails.put("education", employeeDetails.getEducation());
+                userDetails.put("educationField", employeeDetails.getEducationField());
+                userDetails.put("environmentSatisfaction", employeeDetails.getEnvironmentSatisfaction());
+                userDetails.put("gender", employeeDetails.getGender());
                 userDetails.put("hourlyRate", employeeDetails.getHourlyRate());
-                userDetails.put("certifications", employeeDetails.getCertifications());
-                userDetails.put("educationLevel", employeeDetails.getEducationLevel());
-                userDetails.put("university", employeeDetails.getUniversity());
-                userDetails.put("graduationYear", employeeDetails.getGraduationYear());
-                userDetails.put("previousExperienceYears", employeeDetails.getPreviousExperienceYears());
+                userDetails.put("jobInvolvement", employeeDetails.getJobInvolvement());
+                userDetails.put("jobLevel", employeeDetails.getJobLevel());
+                userDetails.put("jobRole", employeeDetails.getJobRole());
+                userDetails.put("jobSatisfaction", employeeDetails.getJobSatisfaction());
+                userDetails.put("maritalStatus", employeeDetails.getMaritalStatus());
+                userDetails.put("monthlyIncome", employeeDetails.getMonthlyIncome());
+                userDetails.put("monthlyRate", employeeDetails.getMonthlyRate());
+                userDetails.put("numCompaniesWorked", employeeDetails.getNumCompaniesWorked());
+                userDetails.put("overTime", employeeDetails.getOverTime());
+                userDetails.put("relationshipSatisfaction", employeeDetails.getRelationshipSatisfaction());
+                userDetails.put("stockOptionLevel", employeeDetails.getStockOptionLevel());
+                userDetails.put("totalWorkingYears", employeeDetails.getTotalWorkingYears());
+                userDetails.put("trainingTimesLastYear", employeeDetails.getTrainingTimesLastYear());
+                userDetails.put("workLifeBalance", employeeDetails.getWorkLifeBalance());
+                userDetails.put("yearsAtCompany", employeeDetails.getYearsAtCompany());
+                userDetails.put("yearsInCurrentRole", employeeDetails.getYearsInCurrentRole());
+                userDetails.put("yearsSinceLastPromotion", employeeDetails.getYearsSinceLastPromotion());
+                userDetails.put("yearsWithCurrManager", employeeDetails.getYearsWithCurrManager());
                 userDetails.put("employmentStatus", employeeDetails.getEmploymentStatus());
-                userDetails.put("probationEndDate", employeeDetails.getProbationEndDate());
-                userDetails.put("shiftTimings", employeeDetails.getShiftTimings());
-                userDetails.put("accessLevel", employeeDetails.getAccessLevel());
-                userDetails.put("budgetAuthority", employeeDetails.getBudgetAuthority());
-                userDetails.put("salesTarget", employeeDetails.getSalesTarget());
-                userDetails.put("commissionRate", employeeDetails.getCommissionRate());
-                userDetails.put("internDurationMonths", employeeDetails.getInternDurationMonths());
-                userDetails.put("mentorId", employeeDetails.getMentorId());
                 userDetails.put("officeLocation", employeeDetails.getOfficeLocation());
-                userDetails.put("workMode", employeeDetails.getWorkMode());
-                userDetails.put("notes", employeeDetails.getNotes());
-                userDetails.put("hr_approved", employeeDetails.getHrApproved());
-                userDetails.put("admin_approved", employeeDetails.getAdminApproved());
-                userDetails.put("finance_approved", employeeDetails.getFinanceApproved());
                 userDetails.put("createdAt", employeeDetails.getCreatedAt());
                 userDetails.put("updatedAt", employeeDetails.getUpdatedAt());
             }
             return userDetails;
         }).toList();
 
-        // Create response with pagination metadata
         Map<String, Object> response = new HashMap<>();
         response.put("content", userDetailsList);
         response.put("totalElements", usersPage.getTotalElements());
