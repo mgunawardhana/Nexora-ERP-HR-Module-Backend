@@ -1,7 +1,10 @@
 package com.nexora.backend.domain.entity;
 
+import com.nexora.backend.domain.enums.EmploymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -107,4 +110,33 @@ public class EmployeeDetails {
 
     @Column(name = "years_with_curr_manager")
     private Integer yearsWithCurrManager;
+
+    // Additional fields needed for analytics
+    @Enumerated(EnumType.STRING)
+    @Column(name = "employment_status")
+    private EmploymentStatus employmentStatus;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        updatedAt = LocalDateTime.now();
+
+        // Set default employment status if not provided
+        if (employmentStatus == null) {
+            employmentStatus = EmploymentStatus.ACTIVE;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

@@ -3,23 +3,19 @@ package com.nexora.backend.analytics.service.impl;
 import com.nexora.backend.analytics.repository.AnalyticsRepository;
 import com.nexora.backend.analytics.repository.EmployeeKpiRecordRepository;
 import com.nexora.backend.analytics.service.EmployeeDetailsService;
-import com.nexora.backend.domain.entity.EmployeeKpiRecord;
 import com.nexora.backend.domain.enums.EmploymentStatus;
 import com.nexora.backend.domain.enums.Role;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -33,7 +29,8 @@ public class EmployeeDetailsServiceImpl implements EmployeeDetailsService {
 
     @Override
     public Map<String, Long> getEmployeeCountByRole() {
-        List<Object[]> results = analyticsRepository.findEmployeeCountByRole();
+//        List<Object[]> results = analyticsRepository.findEmployeeCountByRole();
+        List<Object[]> results = analyticsRepository.findEmployeeCountByRoleAndEmploymentStatus();
         Map<String, Long> roleCountMap = new HashMap<>();
 
         for (Object[] result : results) {
@@ -42,12 +39,13 @@ public class EmployeeDetailsServiceImpl implements EmployeeDetailsService {
             roleCountMap.put(role.name(), count);
         }
 
-        return roleCountMap;
+        return null;
     }
 
     @Override
     public Map<String, Map<String, Long>> getEmployeeCountByRoleAndOfficeLocation() {
-        List<Object[]> results = analyticsRepository.findEmployeeCountByRoleAndOfficeLocation();
+//        List<Object[]> results = analyticsRepository.findEmployeeCountByRoleAndOfficeLocation();
+        List<Object[]> results = analyticsRepository.findAgeGroupDistribution();
         Map<String, Map<String, Long>> locationRoleCountMap = new HashMap<>();
 
         for (Object[] result : results) {
@@ -63,7 +61,7 @@ public class EmployeeDetailsServiceImpl implements EmployeeDetailsService {
 
     @Override
     public Map<String, Map<String, Long>> getEmployeeCountByRoleAndEmploymentStatus() {
-        List<Object[]> results = analyticsRepository.findEmployeeCountByRoleAndEmploymentStatus();
+        List<Object[]> results = analyticsRepository.findExperienceDistribution();
         Map<String, Map<String, Long>> statusRoleCountMap = new HashMap<>();
 
         for (Object[] result : results) {
@@ -79,7 +77,7 @@ public class EmployeeDetailsServiceImpl implements EmployeeDetailsService {
 
     @Override
     public String generateEmployeeAttendanceCsv() {
-        List<Object[]> data = analyticsRepository.findEmployeeAttendanceData();
+        List<Object[]> data = null;
 
         StringBuilder csvBuilder = new StringBuilder();
 

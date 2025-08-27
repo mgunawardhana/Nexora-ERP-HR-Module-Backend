@@ -33,9 +33,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 @Slf4j
 @Service
@@ -87,45 +90,43 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             User savedUser = userRepository.save(user);
             log.debug("Saved user with ID: {}", savedUser.getId());
 
+            // Create EmployeeDetails with the updated structure
             EmployeeDetails employeeDetails = EmployeeDetails.builder()
                     .user(savedUser)
                     .employeeName(registrationRequest.getFirstName() + " " + registrationRequest.getLastName())
-                    .nationalId(registrationRequest.getNationalId())
-                    .phoneNumber(registrationRequest.getPhoneNumber())
-                    .employeeCode(registrationRequest.getEmployeeCode())
+                    .age(calculateAge(registrationRequest.getDateOfBirth()))
+                    .businessTravel(getDefaultBusinessTravel())
+                    .dailyRate(calculateDailyRate(registrationRequest.getCurrentSalary()))
                     .department(registrationRequest.getDepartment())
-                    .jobRole(registrationRequest.getDesignation())
-                    .joinDate(registrationRequest.getJoinDate())
-                    .monthlyIncome(registrationRequest.getCurrentSalary())
-                    .emergencyContactName(registrationRequest.getEmergencyContactName())
-                    .emergencyContactPhone(registrationRequest.getEmergencyContactPhone())
-                    .dateOfBirth(registrationRequest.getDateOfBirth())
-                    .bankAccountNumber(registrationRequest.getBankAccountNumber())
-                    .bankName(registrationRequest.getBankName())
-                    .taxId(registrationRequest.getTaxId())
-                    .managerId(registrationRequest.getManagerId())
-                    .teamSize(registrationRequest.getTeamSize())
-                    .specialization(registrationRequest.getSpecialization())
-                    .contractStartDate(registrationRequest.getContractStartDate())
-                    .contractEndDate(registrationRequest.getContractEndDate())
-                    .hourlyRate(registrationRequest.getHourlyRate())
-                    .certifications(registrationRequest.getCertifications())
+                    .distanceFromHome(getRandomDistanceFromHome())
+                    .education(mapEducationLevel(registrationRequest.getEducationLevel()))
                     .educationField(registrationRequest.getEducationLevel())
-                    .university(registrationRequest.getUniversity())
-                    .graduationYear(registrationRequest.getGraduationYear())
-                    .totalWorkingYears(registrationRequest.getPreviousExperienceYears())
-                    .employmentStatus(registrationRequest.getEmploymentStatus())
-                    .probationEndDate(registrationRequest.getProbationEndDate())
-                    .shiftTimings(registrationRequest.getShiftTimings())
-                    .accessLevel(registrationRequest.getAccessLevel())
-                    .budgetAuthority(registrationRequest.getBudgetAuthority())
-                    .salesTarget(registrationRequest.getSalesTarget())
-                    .commissionRate(registrationRequest.getCommissionRate())
-                    .internDurationMonths(registrationRequest.getInternDurationMonths())
-                    .mentorId(registrationRequest.getMentorId())
-                    .officeLocation(registrationRequest.getOfficeLocation())
-                    .workMode(registrationRequest.getWorkMode())
-                    .notes(registrationRequest.getNotes())
+                    .environmentSatisfaction(getDefaultSatisfactionLevel())
+                    .gender(getDefaultGender())
+                    .hourlyRate(registrationRequest.getHourlyRate() != null ?
+                            registrationRequest.getHourlyRate().intValue() : calculateHourlyRate(registrationRequest.getCurrentSalary()))
+                    .jobInvolvement(getDefaultJobInvolvement())
+                    .jobLevel(mapJobLevel(registrationRequest.getDesignation()))
+                    .jobRole(registrationRequest.getDesignation())
+                    .jobSatisfaction(getDefaultSatisfactionLevel())
+                    .maritalStatus(getDefaultMaritalStatus())
+                    .monthlyIncome(registrationRequest.getCurrentSalary() != null ?
+                            registrationRequest.getCurrentSalary().intValue() : getDefaultMonthlyIncome())
+                    .monthlyRate(calculateMonthlyRate(registrationRequest.getCurrentSalary()))
+                    .numCompaniesWorked(getRandomNumCompanies())
+                    .overTime(getDefaultOverTime())
+                    .relationshipSatisfaction(getDefaultSatisfactionLevel())
+                    .stockOptionLevel(getDefaultStockOptionLevel())
+                    .totalWorkingYears(registrationRequest.getPreviousExperienceYears() != null ?
+                            registrationRequest.getPreviousExperienceYears() : getDefaultWorkingYears())
+                    .trainingTimesLastYear(getDefaultTrainingTimes())
+                    .workLifeBalance(getDefaultWorkLifeBalance())
+                    .yearsAtCompany(calculateYearsAtCompany(registrationRequest.getJoinDate()))
+                    .yearsInCurrentRole(getDefaultYearsInCurrentRole())
+                    .yearsSinceLastPromotion(getDefaultYearsSinceLastPromotion())
+                    .yearsWithCurrManager(getDefaultYearsWithCurrManager())
+                    .employmentStatus(registrationRequest.getEmploymentStatus() != null ?
+                            registrationRequest.getEmploymentStatus() : getDefaultEmploymentStatus())
                     .build();
 
             log.info("Saving employee details for user: {}", savedUser.getEmail());
@@ -226,42 +227,35 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             employeeDetailsRepository.findByUser(user).ifPresent(employeeDetails -> {
                 userDetails.put("employeeName", employeeDetails.getEmployeeName());
-                userDetails.put("nationalId", employeeDetails.getNationalId());
-                userDetails.put("phoneNumber", employeeDetails.getPhoneNumber());
-                userDetails.put("employeeCode", employeeDetails.getEmployeeCode());
+                userDetails.put("age", employeeDetails.getAge());
+                userDetails.put("businessTravel", employeeDetails.getBusinessTravel());
+                userDetails.put("dailyRate", employeeDetails.getDailyRate());
                 userDetails.put("department", employeeDetails.getDepartment());
-                userDetails.put("jobRole", employeeDetails.getJobRole());
-                userDetails.put("joinDate", employeeDetails.getJoinDate());
-                userDetails.put("monthlyIncome", employeeDetails.getMonthlyIncome());
-                userDetails.put("emergencyContactName", employeeDetails.getEmergencyContactName());
-                userDetails.put("emergencyContactPhone", employeeDetails.getEmergencyContactPhone());
-                userDetails.put("dateOfBirth", employeeDetails.getDateOfBirth());
-                userDetails.put("bankAccountNumber", employeeDetails.getBankAccountNumber());
-                userDetails.put("bankName", employeeDetails.getBankName());
-                userDetails.put("taxId", employeeDetails.getTaxId());
-                userDetails.put("managerId", employeeDetails.getManagerId());
-                userDetails.put("teamSize", employeeDetails.getTeamSize());
-                userDetails.put("specialization", employeeDetails.getSpecialization());
-                userDetails.put("contractStartDate", employeeDetails.getContractStartDate());
-                userDetails.put("contractEndDate", employeeDetails.getContractEndDate());
-                userDetails.put("hourlyRate", employeeDetails.getHourlyRate());
-                userDetails.put("certifications", employeeDetails.getCertifications());
+                userDetails.put("distanceFromHome", employeeDetails.getDistanceFromHome());
+                userDetails.put("education", employeeDetails.getEducation());
                 userDetails.put("educationField", employeeDetails.getEducationField());
-                userDetails.put("university", employeeDetails.getUniversity());
-                userDetails.put("graduationYear", employeeDetails.getGraduationYear());
+                userDetails.put("environmentSatisfaction", employeeDetails.getEnvironmentSatisfaction());
+                userDetails.put("gender", employeeDetails.getGender());
+                userDetails.put("hourlyRate", employeeDetails.getHourlyRate());
+                userDetails.put("jobInvolvement", employeeDetails.getJobInvolvement());
+                userDetails.put("jobLevel", employeeDetails.getJobLevel());
+                userDetails.put("jobRole", employeeDetails.getJobRole());
+                userDetails.put("jobSatisfaction", employeeDetails.getJobSatisfaction());
+                userDetails.put("maritalStatus", employeeDetails.getMaritalStatus());
+                userDetails.put("monthlyIncome", employeeDetails.getMonthlyIncome());
+                userDetails.put("monthlyRate", employeeDetails.getMonthlyRate());
+                userDetails.put("numCompaniesWorked", employeeDetails.getNumCompaniesWorked());
+                userDetails.put("overTime", employeeDetails.getOverTime());
+                userDetails.put("relationshipSatisfaction", employeeDetails.getRelationshipSatisfaction());
+                userDetails.put("stockOptionLevel", employeeDetails.getStockOptionLevel());
                 userDetails.put("totalWorkingYears", employeeDetails.getTotalWorkingYears());
+                userDetails.put("trainingTimesLastYear", employeeDetails.getTrainingTimesLastYear());
+                userDetails.put("workLifeBalance", employeeDetails.getWorkLifeBalance());
+                userDetails.put("yearsAtCompany", employeeDetails.getYearsAtCompany());
+                userDetails.put("yearsInCurrentRole", employeeDetails.getYearsInCurrentRole());
+                userDetails.put("yearsSinceLastPromotion", employeeDetails.getYearsSinceLastPromotion());
+                userDetails.put("yearsWithCurrManager", employeeDetails.getYearsWithCurrManager());
                 userDetails.put("employmentStatus", employeeDetails.getEmploymentStatus());
-                userDetails.put("probationEndDate", employeeDetails.getProbationEndDate());
-                userDetails.put("shiftTimings", employeeDetails.getShiftTimings());
-                userDetails.put("accessLevel", employeeDetails.getAccessLevel());
-                userDetails.put("budgetAuthority", employeeDetails.getBudgetAuthority());
-                userDetails.put("salesTarget", employeeDetails.getSalesTarget());
-                userDetails.put("commissionRate", employeeDetails.getCommissionRate());
-                userDetails.put("internDurationMonths", employeeDetails.getInternDurationMonths());
-                userDetails.put("mentorId", employeeDetails.getMentorId());
-                userDetails.put("officeLocation", employeeDetails.getOfficeLocation());
-                userDetails.put("workMode", employeeDetails.getWorkMode());
-                userDetails.put("notes", employeeDetails.getNotes());
                 userDetails.put("createdAt", employeeDetails.getCreatedAt());
                 userDetails.put("updatedAt", employeeDetails.getUpdatedAt());
             });
@@ -317,5 +311,123 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             token.setRevoked(true);
         });
         tokenRepository.saveAll(validUserTokens);
+    }
+
+    // Helper methods for mapping and default values
+    private Integer calculateAge(LocalDate dateOfBirth) {
+        if (dateOfBirth == null) return 30; // Default age
+        return Period.between(dateOfBirth, LocalDate.now()).getYears();
+    }
+
+    private String getDefaultBusinessTravel() {
+        String[] options = {"Travel_Rarely", "Travel_Frequently", "Non-Travel"};
+        return options[new Random().nextInt(options.length)];
+    }
+
+    private Integer calculateDailyRate(java.math.BigDecimal salary) {
+        if (salary == null) return 800; // Default daily rate
+        return salary.divide(java.math.BigDecimal.valueOf(22), java.math.RoundingMode.HALF_UP).intValue();
+    }
+
+    private Integer getRandomDistanceFromHome() {
+        return new Random().nextInt(30) + 1; // 1-30 km
+    }
+
+    private Integer mapEducationLevel(String educationLevel) {
+        if (educationLevel == null) return 3;
+        return switch (educationLevel.toLowerCase()) {
+            case "bachelor", "bachelor's" -> 3;
+            case "master", "master's" -> 4;
+            case "phd", "doctorate" -> 5;
+            case "diploma" -> 2;
+            default -> 3;
+        };
+    }
+
+    private Integer getDefaultSatisfactionLevel() {
+        return new Random().nextInt(4) + 1; // 1-4 scale
+    }
+
+    private String getDefaultGender() {
+        return new Random().nextBoolean() ? "Male" : "Female";
+    }
+
+    private Integer calculateHourlyRate(java.math.BigDecimal salary) {
+        if (salary == null) return 50;
+        return salary.divide(java.math.BigDecimal.valueOf(176), java.math.RoundingMode.HALF_UP).intValue(); // 22 days * 8 hours
+    }
+
+    private Integer getDefaultJobInvolvement() {
+        return new Random().nextInt(4) + 1; // 1-4 scale
+    }
+
+    private Integer mapJobLevel(String designation) {
+        if (designation == null) return 2;
+        return switch (designation.toLowerCase()) {
+            case "junior", "intern" -> 1;
+            case "senior", "lead" -> 3;
+            case "manager" -> 4;
+            case "director", "vp" -> 5;
+            default -> 2;
+        };
+    }
+
+    private String getDefaultMaritalStatus() {
+        String[] options = {"Single", "Married", "Divorced"};
+        return options[new Random().nextInt(options.length)];
+    }
+
+    private Integer getDefaultMonthlyIncome() {
+        return new Random().nextInt(10000) + 5000; // 5000-15000
+    }
+
+    private Integer calculateMonthlyRate(java.math.BigDecimal salary) {
+        if (salary == null) return 15000;
+        return salary.intValue();
+    }
+
+    private Integer getRandomNumCompanies() {
+        return new Random().nextInt(5) + 1; // 1-5 companies
+    }
+
+    private String getDefaultOverTime() {
+        return new Random().nextBoolean() ? "Yes" : "No";
+    }
+
+    private Integer getDefaultStockOptionLevel() {
+        return new Random().nextInt(4); // 0-3
+    }
+
+    private Integer getDefaultWorkingYears() {
+        return new Random().nextInt(20) + 1; // 1-20 years
+    }
+
+    private Integer getDefaultTrainingTimes() {
+        return new Random().nextInt(6); // 0-5 times
+    }
+
+    private Integer getDefaultWorkLifeBalance() {
+        return new Random().nextInt(4) + 1; // 1-4 scale
+    }
+
+    private Integer calculateYearsAtCompany(LocalDate joinDate) {
+        if (joinDate == null) return 1;
+        return Math.max(0, Period.between(joinDate, LocalDate.now()).getYears());
+    }
+
+    private Integer getDefaultYearsInCurrentRole() {
+        return new Random().nextInt(5) + 1; // 1-5 years
+    }
+
+    private Integer getDefaultYearsSinceLastPromotion() {
+        return new Random().nextInt(10); // 0-9 years
+    }
+
+    private Integer getDefaultYearsWithCurrManager() {
+        return new Random().nextInt(8) + 1; // 1-8 years
+    }
+
+    private com.nexora.backend.domain.enums.EmploymentStatus getDefaultEmploymentStatus() {
+        return com.nexora.backend.domain.enums.EmploymentStatus.ACTIVE;
     }
 }
