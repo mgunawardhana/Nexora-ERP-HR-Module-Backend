@@ -74,7 +74,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final ResponseUtil responseUtil;
 
     @Override
-    public ResponseEntity<APIResponse> findDriverEmailByDriverId(String email) throws IOException {
+    public ResponseEntity<APIResponse> findEmployeeByEmail(String email) throws IOException {
         try {
             Integer driverId = readJdbcTemplate.queryForObject(
                     SqlQuery.SelectQuery.FIND_ID_BY_EMAIL,
@@ -349,6 +349,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 userDetails.put("officeLocation", employeeDetails.getOfficeLocation());
                 userDetails.put("workMode", employeeDetails.getWorkMode());
                 userDetails.put("notes", employeeDetails.getNotes());
+                userDetails.put("hr_approved", employeeDetails.getHrApproved());
+                userDetails.put("admin_approved", employeeDetails.getAdminApproved());
+                userDetails.put("finance_approved", employeeDetails.getFinanceApproved());
                 userDetails.put("createdAt", employeeDetails.getCreatedAt());
                 userDetails.put("updatedAt", employeeDetails.getUpdatedAt());
             }

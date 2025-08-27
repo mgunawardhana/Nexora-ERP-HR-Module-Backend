@@ -53,7 +53,7 @@ public class AuthManagementController {
     @PostMapping("/get-user-by-email/{email}")
     public ResponseEntity<APIResponse> getUserByEmail(@PathVariable String email) throws IOException {
         log.info("Get User By Email: {}", email);
-        return authenticationService.findDriverEmailByDriverId(email);
+        return authenticationService.findEmployeeByEmail(email);
     }
 
 

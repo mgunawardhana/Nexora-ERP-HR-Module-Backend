@@ -1,16 +1,12 @@
 package com.nexora.backend.domain.entity;
 
-import com.nexora.backend.domain.enums.EmploymentStatus;
-import com.nexora.backend.domain.enums.WorkMode;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMin;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -29,120 +25,95 @@ public class EmployeeDetails {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    @Column(name = "employee_code", unique = true)
-    private String employeeCode = "EMP" + System.currentTimeMillis();
+    // JSON mapped fields
+    @Column(name = "employee_name")
+    private String employeeName;
+
+    @Column(name = "age")
+    private Integer age;
+
+    @Column(name = "business_travel")
+    private String businessTravel;
+
+    @Column(name = "daily_rate", precision = 10, scale = 2)
+    private BigDecimal dailyRate;
 
     @Column(name = "department")
-    private String department = "Unassigned";
+    private String department;
 
-    @Column(name = "designation")
-    private String designation = "New Hire";
+    @Column(name = "distance_from_home")
+    private Integer distanceFromHome;
 
-    @Column(name = "join_date")
-    private LocalDate joinDate = LocalDate.now();
+    @Column(name = "education")
+    private Integer education;
 
-    @Column(name = "current_salary", precision = 12, scale = 2)
-    @DecimalMin(value = "0.0", inclusive = false, message = "Salary must be greater than 0")
-    private BigDecimal currentSalary = new BigDecimal("0.01");
+    @Column(name = "education_field")
+    private String educationField;
 
-    @Column(name = "phone_number")
-    private String phoneNumber = "N/A";
+    @Column(name = "environment_satisfaction")
+    private Integer environmentSatisfaction;
 
-    @Column(name = "address", columnDefinition = "TEXT")
-    private String address = "N/A";
+    @Column(name = "gender")
+    private String gender;
 
-    @Column(name = "emergency_contact_name")
-    private String emergencyContactName = "N/A";
+    @Column(name = "hourly_rate", precision = 10, scale = 2)
+    private BigDecimal hourlyRate;
 
-    @Column(name = "emergency_contact_phone")
-    private String emergencyContactPhone = "N/A";
+    @Column(name = "job_involvement")
+    private Integer jobInvolvement;
 
-    @Column(name = "date_of_birth")
-    private LocalDate dateOfBirth = LocalDate.of(2000, 1, 1);
+    @Column(name = "job_level")
+    private Integer jobLevel;
 
-    @Column(name = "national_id")
-    private String nationalId = "N/A";
+    @Column(name = "job_role")
+    private String jobRole;
 
-    @Column(name = "bank_account_number")
-    private String bankAccountNumber = "N/A";
+    @Column(name = "job_satisfaction")
+    private Integer jobSatisfaction;
 
-    @Column(name = "bank_name")
-    private String bankName = "N/A";
+    @Column(name = "marital_status")
+    private String maritalStatus;
 
-    @Column(name = "tax_id")
-    private String taxId = "N/A";
+    @Column(name = "monthly_income", precision = 12, scale = 2)
+    private BigDecimal monthlyIncome;
 
-    @Column(name = "manager_id")
-    private Integer managerId = 0;
+    @Column(name = "monthly_rate", precision = 12, scale = 2)
+    private BigDecimal monthlyRate;
 
-    @Column(name = "team_size")
-    private Integer teamSize = 0;
+    @Column(name = "num_companies_worked")
+    private Integer numCompaniesWorked;
 
-    @Column(name = "specialization")
-    private String specialization = "N/A";
+    @Column(name = "over_time")
+    private String overTime;
 
-    @Column(name = "contract_start_date")
-    private LocalDate contractStartDate = LocalDate.now();
+    @Column(name = "relationship_satisfaction")
+    private Integer relationshipSatisfaction;
 
-    @Column(name = "contract_end_date")
-    private LocalDate contractEndDate = LocalDate.now().plusYears(1);
+    @Column(name = "stock_option_level")
+    private Integer stockOptionLevel;
 
-    @Column(name = "hourly_rate", precision = 8, scale = 2)
-    private BigDecimal hourlyRate = new BigDecimal("0.00");
+    @Column(name = "total_working_years")
+    private Integer totalWorkingYears;
 
-    @Column(name = "certifications", columnDefinition = "TEXT")
-    private String certifications = "None";
+    @Column(name = "training_times_last_year")
+    private Integer trainingTimesLastYear;
 
-    @Column(name = "education_level")
-    private String educationLevel = "N/A";
+    @Column(name = "work_life_balance")
+    private Integer workLifeBalance;
 
-    @Column(name = "university")
-    private String university = "N/A";
+    @Column(name = "years_at_company")
+    private Integer yearsAtCompany;
 
-    @Column(name = "graduation_year")
-    private Integer graduationYear = 0;
+    @Column(name = "years_in_current_role")
+    private Integer yearsInCurrentRole;
 
-    @Column(name = "previous_experience_years")
-    private Integer previousExperienceYears = 0;
+    @Column(name = "years_since_last_promotion")
+    private Integer yearsSinceLastPromotion;
 
-    @Column(name = "employment_status")
-    @Enumerated(EnumType.STRING)
-    private EmploymentStatus employmentStatus = EmploymentStatus.PROBATION;
+    @Column(name = "years_with_curr_manager")
+    private Integer yearsWithCurrManager;
 
-    @Column(name = "probation_end_date")
-    private LocalDate probationEndDate = LocalDate.now().plusMonths(3);
-
-    @Column(name = "shift_timings")
-    private String shiftTimings = "9:00-17:00";
-
-    @Column(name = "access_level")
-    private String accessLevel = "BASIC";
-
-    @Column(name = "budget_authority", precision = 12, scale = 2)
-    private BigDecimal budgetAuthority = new BigDecimal("0.00");
-
-    @Column(name = "sales_target", precision = 12, scale = 2)
-    private BigDecimal salesTarget = new BigDecimal("0.00");
-
-    @Column(name = "commission_rate", precision = 5, scale = 2)
-    private BigDecimal commissionRate = new BigDecimal("0.00");
-
-    @Column(name = "intern_duration_months")
-    private Integer internDurationMonths = 0;
-
-    @Column(name = "mentor_id")
-    private Integer mentorId = 0;
-
-    @Column(name = "office_location")
-    private String officeLocation = "Main Office";
-
-    @Column(name = "work_mode")
-    @Enumerated(EnumType.STRING)
-    private WorkMode workMode = WorkMode.OFFICE;
-
-    @Column(name = "notes", columnDefinition = "TEXT")
-    private String notes = "";
-
+    // Timestamps
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

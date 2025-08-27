@@ -13,7 +13,7 @@ import java.io.IOException;
 public interface AuthenticationService {
 
 
-    ResponseEntity<APIResponse> findDriverEmailByDriverId(String email) throws IOException;
+    ResponseEntity<APIResponse> findEmployeeByEmail(String email) throws IOException;
 
     /**
      * Registers a new user based on the provided registration request.
