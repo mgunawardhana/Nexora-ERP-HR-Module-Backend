@@ -57,4 +57,12 @@ public interface AuthenticationService {
      * @return a {@link ResponseEntity} containing an {@link APIResponse} with the authentication records
      */
     ResponseEntity<APIResponse> getAllAuthentications(int page, int size);
+
+    /**
+     * Retrieves employee details by user ID.
+     *
+     * @param id the user ID
+     * @return a {@link ResponseEntity} containing an {@link APIResponse} with the employee details
+     */
+    ResponseEntity<APIResponse> findEmployeeById(Integer id);
 }

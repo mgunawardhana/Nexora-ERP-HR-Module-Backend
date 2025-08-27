@@ -282,6 +282,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return responseUtil.wrapSuccess(responseData, HttpStatus.OK);
     }
 
+    @Override
+    public ResponseEntity<APIResponse> findEmployeeById(Integer id) {
+        try {
+            var employeeDetails = employeeDetailsRepository.findByUserId(id);
+            if (employeeDetails.isPresent()) {
+                return responseUtil.wrapSuccess(employeeDetails.get(), HttpStatus.OK);
+            }
+            return responseUtil.wrapError("Employee not found", "No employee found with user ID: " + id, HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            log.warn("Failed to retrieve employee details by user ID {}: {}", id, e.getMessage());
+            return responseUtil.wrapError("Failed to retrieve employee details", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     private void saveUserToken(User user, String jwtToken) {
         var token = Token.builder()
                 .user(user)

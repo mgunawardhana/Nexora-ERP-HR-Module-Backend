@@ -56,5 +56,9 @@ public class AuthManagementController {
         return authenticationService.findEmployeeByEmail(email);
     }
 
-
+    @GetMapping("/get-user-by-id/{id}")
+    public ResponseEntity<APIResponse> getUserById(@PathVariable Integer id) {
+        log.info("Get User By ID: {}", id);
+        return authenticationService.findEmployeeById(id);
+    }
 }
