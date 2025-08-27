@@ -2,10 +2,11 @@ package com.nexora.backend.authentication.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexora.backend.authentication.repository.EmployeeDetailsRepository;
+import com.nexora.backend.authentication.repository.TokenRepository;
 import com.nexora.backend.authentication.repository.UserRepository;
 import com.nexora.backend.authentication.service.AuthenticationService;
-import com.nexora.backend.constant.SqlQuery;
 import com.nexora.backend.domain.entity.EmployeeDetails;
+import com.nexora.backend.domain.entity.Token;
 import com.nexora.backend.domain.entity.User;
 import com.nexora.backend.domain.enums.TokenType;
 import com.nexora.backend.domain.request.AuthenticationRequest;
@@ -24,7 +25,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -33,9 +33,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,44 +45,34 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @NonNull
     private final UserRepository userRepository;
-
     @NonNull
-    private final JdbcTemplate writeJdbcTemplate;
-
-    @NonNull
-    private final JdbcTemplate readJdbcTemplate;
-
-    @NonNull
-    private final PasswordEncoder passwordEncoder;
-
-    @NonNull
-    private final JwtServiceImpl jwtServiceImpl;
-
-    @NonNull
-    private final AuthenticationManager authenticationManager;
-
+    private final TokenRepository tokenRepository;
     @NonNull
     private final EmployeeDetailsRepository employeeDetailsRepository;
-
-
+    @NonNull
+    private final PasswordEncoder passwordEncoder;
+    @NonNull
+    private final JwtServiceImpl jwtServiceImpl;
+    @NonNull
+    private final AuthenticationManager authenticationManager;
     @NonNull
     private final ResponseUtil responseUtil;
 
     @Override
-    public ResponseEntity<APIResponse> findEmployeeByEmail(String email) throws IOException {
+    public ResponseEntity<APIResponse> findEmployeeByEmail(String email) {
         try {
-            Integer driverId = readJdbcTemplate.queryForObject(
-                    SqlQuery.SelectQuery.FIND_ID_BY_EMAIL,
-                    new Object[]{email},
-                    (rs, rowNum) -> rs.getInt("id")
-            );
-            return responseUtil.wrapSuccess(driverId, HttpStatus.OK);
+            var user = userRepository.findByEmail(email);
+            if (user.isPresent()) {
+                return responseUtil.wrapSuccess(user.get().getId(), HttpStatus.OK);
+            }
+            return responseUtil.wrapError("User not found", "No user found with email: " + email, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            log.warn("Failed to retrieve driver ID {}", e.getMessage());
-            return responseUtil.wrapError("Failed to retrieve driver ID", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            log.warn("Failed to retrieve user ID by email {}: {}", email, e.getMessage());
+            return responseUtil.wrapError("Failed to retrieve user ID", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
+    @Override
     @Transactional
     public AuthenticationResponse register(RegistrationRequest registrationRequest) {
         try {
@@ -98,7 +85,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .build();
 
             log.info("Processing registration for user: {}", user.getEmail());
-
             User savedUser = userRepository.save(user);
             log.debug("Saved user with ID: {}", savedUser.getId());
 
@@ -106,63 +92,23 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .user(savedUser)
                     .employeeName(registrationRequest.getFirstName() + " " + registrationRequest.getLastName())
                     .department(registrationRequest.getDepartment())
-                    .age(null)
-                    .businessTravel(null)
-                    .dailyRate(null)
-                    .distanceFromHome(null)
-                    .education(null)
-                    .educationField(registrationRequest.getEducationLevel())
-                    .environmentSatisfaction(null)
-                    .gender(null)
+                    .jobRole(registrationRequest.getDesignation())
+                    .monthlyIncome(registrationRequest.getCurrentSalary())
                     .hourlyRate(registrationRequest.getHourlyRate())
-                    .jobInvolvement(null)
-                    .jobLevel(null)
-                    .jobRole(null)
-                    .jobSatisfaction(null)
-                    .maritalStatus(null)
-                    .monthlyIncome(null)
-                    .monthlyRate(null)
-                    .numCompaniesWorked(null)
-                    .overTime(null)
-                    .relationshipSatisfaction(null)
-                    .stockOptionLevel(null)
+                    .educationField(registrationRequest.getEducationLevel())
                     .totalWorkingYears(registrationRequest.getPreviousExperienceYears())
-                    .trainingTimesLastYear(null)
-                    .workLifeBalance(null)
-                    .yearsAtCompany(null)
-                    .yearsInCurrentRole(null)
-                    .yearsSinceLastPromotion(null)
-                    .yearsWithCurrManager(null)
                     .employmentStatus(registrationRequest.getEmploymentStatus())
                     .officeLocation(registrationRequest.getOfficeLocation())
                     .build();
 
             log.info("Saving employee details for user: {}", savedUser.getEmail());
-
             employeeDetailsRepository.save(employeeDetails);
             log.debug("Saved employee details for user ID: {}", savedUser.getId());
 
             String accessToken = jwtServiceImpl.generateToken(savedUser);
             String refreshToken = jwtServiceImpl.generateRefreshToken(savedUser);
 
-            try {
-                log.debug("Attempting to save token for user ID: {} with token: {}", savedUser.getId(), accessToken);
-                writeJdbcTemplate.update(
-                        SqlQuery.InsertQuery.INSERT_TOKEN,
-                        accessToken,
-                        TokenType.BEARER.name(),
-                        false,
-                        false,
-                        savedUser.getId()
-                );
-                log.info("Token saved successfully for user: {}", savedUser.getEmail());
-            } catch (Exception e) {
-                log.error("Failed to save token for user {}: {}", savedUser.getEmail(), e.getMessage(), e);
-                if (e.getCause() instanceof SQLException sqlEx) {
-                    log.error("SQL Error Code: {}, SQL State: {}", sqlEx.getErrorCode(), sqlEx.getSQLState());
-                }
-                throw new RuntimeException("Failed to save authentication token: " + e.getMessage(), e);
-            }
+            saveUserToken(savedUser, accessToken);
 
             return AuthenticationResponse.builder()
                     .accessToken(accessToken)
@@ -170,7 +116,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .userName(savedUser.getFirstName())
                     .role(String.valueOf(savedUser.getRole()))
                     .build();
-
         } catch (Exception e) {
             log.error("Registration failed for user {}: {}", registrationRequest.getEmail(), e.getMessage(), e);
             throw new RuntimeException("Registration failed: " + e.getMessage(), e);
@@ -182,86 +127,59 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
         var user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new RuntimeException("User not found"));
-
-        log.info("AuthenticationResponse From Authenticate Function: {}", user);
-
         var accessToken = jwtServiceImpl.generateToken(user);
         var refreshToken = jwtServiceImpl.generateRefreshToken(user);
 
-        try {
-            int updatedRows = writeJdbcTemplate.update(SqlQuery.InsertQuery.INVOKE_REVOKE_ALL_USER_TOKENS, accessToken, Boolean.FALSE, Boolean.FALSE, user.getId());
+        revokeAllUserTokens(user);
+        saveUserToken(user, accessToken);
 
-            if (updatedRows == 0) {
-                writeJdbcTemplate.update(SqlQuery.InsertQuery.INSERT_TOKEN, accessToken, TokenType.BEARER.name(), Boolean.FALSE, Boolean.FALSE, user.getId());
-            }
-            log.info("Token updated/saved successfully for user: {}", user.getEmail());
-        } catch (Exception e) {
-            log.error("Error managing token for user {}: {}", user.getEmail(), e.getMessage());
-            throw new RuntimeException("Failed to manage authentication token", e);
-        }
-
-        log.info("Generated Token from Authenticate Function: {}", accessToken);
-
-        return AuthenticationResponse.builder().accessToken(Objects.requireNonNull(accessToken)).refreshToken(Objects.requireNonNull(refreshToken)).userName(user.getFirstName() + " " + user.getLastName()).role(String.valueOf(user.getRole())).build();
+        return AuthenticationResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .userName(user.getFirstName() + " " + user.getLastName())
+                .role(String.valueOf(user.getRole()))
+                .build();
     }
 
     @Override
     public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        final String authorizationHeader = request.getHeader(Objects.requireNonNull(HttpHeaders.AUTHORIZATION, "Authorization header cannot be null"));
-        final String refreshToken;
-        final String userEmail;
-
+        final String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            log.error("Authorization Header is Null or Not Started with Bearer");
             return;
         }
 
-        refreshToken = authorizationHeader.substring(7);
-        userEmail = jwtServiceImpl.extractUserName(refreshToken);
+        final String refreshToken = authorizationHeader.substring(7);
+        final String userEmail = jwtServiceImpl.extractUserName(refreshToken);
 
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            var userDetails = this.userRepository.findByEmail(userEmail).orElseThrow();
-            log.info("User Details from Refresh Token: {}", userDetails);
-
-            if (jwtServiceImpl.isTokenValidated(refreshToken, userDetails)) {
-                var accessToken = jwtServiceImpl.generateToken(userDetails);
-                log.info("Generated Token from Refresh Token Function: {}", accessToken);
-
-                try {
-                    writeJdbcTemplate.update(SqlQuery.InsertQuery.INSERT_TOKEN, accessToken, TokenType.BEARER.name(), Boolean.FALSE, Boolean.FALSE, userDetails.getId());
-                    log.info("New access token saved successfully for user: {}", userDetails.getEmail());
-                } catch (Exception e) {
-                    log.error("Error saving new access token for user {}: {}", userDetails.getEmail(), e.getMessage());
-                }
-
-                var authResponse = AuthenticationResponse.builder().accessToken(accessToken).refreshToken(refreshToken).build();
-                log.info("Authentication Response from Refresh Token Function: {}", authResponse);
-
+        if (userEmail != null) {
+            var user = this.userRepository.findByEmail(userEmail).orElseThrow();
+            if (jwtServiceImpl.isTokenValidated(refreshToken, user)) {
+                var accessToken = jwtServiceImpl.generateToken(user);
+                revokeAllUserTokens(user);
+                saveUserToken(user, accessToken);
+                var authResponse = AuthenticationResponse.builder()
+                        .accessToken(accessToken)
+                        .refreshToken(refreshToken)
+                        .build();
                 new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
             }
         }
     }
 
     @Override
-    public void logout(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return;
         }
 
         final String jwt = authHeader.substring(7);
-        var userEmail = jwtServiceImpl.extractUserName(jwt);
-
-        if (userEmail != null) {
-            var user = userRepository.findByEmail(userEmail).orElse(null);
-            if (user != null) {
-                try {
-                    writeJdbcTemplate.update(SqlQuery.UpdateQuery.REVOKE_ALL_USER_TOKENS, Boolean.TRUE, Boolean.TRUE, user.getId());
-                    log.info("Successfully logged out user: {}", userEmail);
-                } catch (Exception e) {
-                    log.error("Error during logout for user {}: {}", userEmail, e.getMessage());
-                }
-            }
+        var storedToken = tokenRepository.findByToken(jwt).orElse(null);
+        if (storedToken != null) {
+            storedToken.setExpired(true);
+            storedToken.setRevoked(true);
+            tokenRepository.save(storedToken);
+            SecurityContextHolder.clearContext();
         }
     }
 
@@ -279,9 +197,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             userDetails.put("role", user.getRole());
             userDetails.put("user_profile_pic", user.getUserProfilePic());
 
-            EmployeeDetails employeeDetails = employeeDetailsRepository.findByUser(user).orElse(null);
-
-            if (employeeDetails != null) {
+            employeeDetailsRepository.findByUser(user).ifPresent(employeeDetails -> {
                 userDetails.put("employeeName", employeeDetails.getEmployeeName());
                 userDetails.put("age", employeeDetails.getAge());
                 userDetails.put("businessTravel", employeeDetails.getBusinessTravel());
@@ -315,21 +231,44 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 userDetails.put("officeLocation", employeeDetails.getOfficeLocation());
                 userDetails.put("createdAt", employeeDetails.getCreatedAt());
                 userDetails.put("updatedAt", employeeDetails.getUpdatedAt());
-            }
+            });
             return userDetails;
         }).toList();
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("content", userDetailsList);
-        response.put("totalElements", usersPage.getTotalElements());
-        response.put("totalPages", usersPage.getTotalPages());
-        response.put("currentPage", usersPage.getNumber());
-        response.put("pageSize", usersPage.getSize());
-        response.put("numberOfElements", usersPage.getNumberOfElements());
-        response.put("first", usersPage.isFirst());
-        response.put("last", usersPage.isLast());
-        response.put("empty", usersPage.isEmpty());
+        Map<String, Object> responseData = new HashMap<>();
+        responseData.put("content", userDetailsList);
+        responseData.put("totalElements", usersPage.getTotalElements());
+        responseData.put("totalPages", usersPage.getTotalPages());
+        responseData.put("currentPage", usersPage.getNumber());
+        responseData.put("pageSize", usersPage.getSize());
+        responseData.put("numberOfElements", usersPage.getNumberOfElements());
+        responseData.put("first", usersPage.isFirst());
+        responseData.put("last", usersPage.isLast());
+        responseData.put("empty", usersPage.isEmpty());
 
-        return responseUtil.wrapSuccess(response, HttpStatus.OK);
+        return responseUtil.wrapSuccess(responseData, HttpStatus.OK);
+    }
+
+    private void saveUserToken(User user, String jwtToken) {
+        var token = Token.builder()
+                .user(user)
+                .token(jwtToken)
+                .tokenType(TokenType.BEARER)
+                .expired(false)
+                .revoked(false)
+                .build();
+        tokenRepository.save(token);
+    }
+
+    private void revokeAllUserTokens(User user) {
+        var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getId());
+        if (validUserTokens.isEmpty()) {
+            return;
+        }
+        validUserTokens.forEach(token -> {
+            token.setExpired(true);
+            token.setRevoked(true);
+        });
+        tokenRepository.saveAll(validUserTokens);
     }
 }

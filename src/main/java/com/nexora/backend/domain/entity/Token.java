@@ -11,10 +11,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity // This was a good addition from the last step!
 public class Token {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // Be explicit here!
     public Integer id;
 
     @Column(unique = true)
@@ -27,5 +28,8 @@ public class Token {
 
     public boolean expired;
 
-    private Integer user_Id;
+    // This defines the many-to-one relationship with the User entity
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id") // This links to the 'id' in the 'users' table
+    public User user;
 }

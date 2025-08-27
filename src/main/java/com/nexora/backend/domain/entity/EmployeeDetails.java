@@ -26,7 +26,6 @@ public class EmployeeDetails {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    // JSON mapped fields
     @Column(name = "employee_name")
     private String employeeName;
 
@@ -121,8 +120,6 @@ public class EmployeeDetails {
     @Column(name = "office_location")
     private String officeLocation;
 
-
-    // Timestamps
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
