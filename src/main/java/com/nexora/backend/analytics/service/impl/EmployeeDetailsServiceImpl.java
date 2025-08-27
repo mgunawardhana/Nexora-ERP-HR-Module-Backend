@@ -29,8 +29,7 @@ public class EmployeeDetailsServiceImpl implements EmployeeDetailsService {
 
     @Override
     public Map<String, Long> getEmployeeCountByRole() {
-//        List<Object[]> results = analyticsRepository.findEmployeeCountByRole();
-        List<Object[]> results = analyticsRepository.findEmployeeCountByRoleAndEmploymentStatus();
+        List<Object[]> results = analyticsRepository.findEmployeeCountByRole();
         Map<String, Long> roleCountMap = new HashMap<>();
 
         for (Object[] result : results) {
@@ -39,13 +38,14 @@ public class EmployeeDetailsServiceImpl implements EmployeeDetailsService {
             roleCountMap.put(role.name(), count);
         }
 
-        return null;
+        return roleCountMap;
     }
 
+
+    //TODO: here
     @Override
     public Map<String, Map<String, Long>> getEmployeeCountByRoleAndOfficeLocation() {
-//        List<Object[]> results = analyticsRepository.findEmployeeCountByRoleAndOfficeLocation();
-        List<Object[]> results = analyticsRepository.findAgeGroupDistribution();
+        List<Object[]> results = analyticsRepository.findGenderDistributionByDepartment();
         Map<String, Map<String, Long>> locationRoleCountMap = new HashMap<>();
 
         for (Object[] result : results) {
@@ -61,7 +61,7 @@ public class EmployeeDetailsServiceImpl implements EmployeeDetailsService {
 
     @Override
     public Map<String, Map<String, Long>> getEmployeeCountByRoleAndEmploymentStatus() {
-        List<Object[]> results = analyticsRepository.findExperienceDistribution();
+        List<Object[]> results = analyticsRepository.findEmployeeCountByRoleAndEmploymentStatus();
         Map<String, Map<String, Long>> statusRoleCountMap = new HashMap<>();
 
         for (Object[] result : results) {
