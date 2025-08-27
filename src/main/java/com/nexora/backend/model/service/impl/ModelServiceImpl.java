@@ -3,7 +3,7 @@ package com.nexora.backend.model.service.impl;
 import com.nexora.backend.authentication.repository.EmployeeDetailsRepository;
 import com.nexora.backend.domain.entity.EmployeeDetails;
 
-import com.nexora.backend.domain.request.PredictionRequest;
+import com.nexora.backend.domain.entity.User;
 import com.nexora.backend.domain.response.dto.PredictionResponse;
 import com.nexora.backend.model.service.ModelService;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +13,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
+import java.time.Period;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -31,28 +35,37 @@ public class ModelServiceImpl implements ModelService {
         Optional<EmployeeDetails> employeeDetailsOpt = employeeDetailsRepository.findByUserId(userId);
 
         if (employeeDetailsOpt.isEmpty()) {
-            // If the employee is not found, return an error.
             return Mono.error(new RuntimeException("Employee not found with user ID: " + userId));
         }
 
         EmployeeDetails employeeDetails = employeeDetailsOpt.get();
 
-        // --- THIS IS THE CORRECT, DYNAMIC APPROACH ---
-        // Build the request body using the data from the database.
-        // It will only use the fields available in your EmployeeDetails entity.
-        PredictionRequest requestBody = PredictionRequest.from(employeeDetails);
 
-        // Call the external API with the dynamically created request body.
+        // Build request body dynamically from EmployeeDetails
+        Map<String, Object> requestBody = new HashMap<>();
+
+        // Call ML API using WebClient
         return webClient.post()
                 .uri("http://localhost:8000/hr/predict")
+                .header("Content-Type", "application/json")
                 .bodyValue(requestBody)
                 .retrieve()
                 .bodyToMono(PredictionResponse.class)
-                .doOnSuccess(response -> {
-                    log.info("Successfully received prediction for employee '{}': {}", response.getEmployeeName(), response);
-                })
-                .doOnError(error -> {
-                    log.error("Error calling prediction API for user ID {}: ", userId, error);
-                });
+                .doOnNext(resp -> log.info("Prediction Response: {}", resp));
+
     }
+
+    private int calculateAge(LocalDate dob) {
+        if (dob == null) return 0;
+        return Period.between(dob, LocalDate.now()).getYears();
+    }
+
+    /**
+     * Helper to calculate years at company
+     */
+    private int calculateYearsAtCompany(LocalDate joinDate) {
+        if (joinDate == null) return 0;
+        return Period.between(joinDate, LocalDate.now()).getYears();
+    }
+
 }
