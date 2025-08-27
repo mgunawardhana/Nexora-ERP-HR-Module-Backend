@@ -144,6 +144,13 @@ public interface AnalyticsRepository extends JpaRepository<EmployeeDetails, Long
             "ORDER BY COUNT(e.id) DESC")
     List<Object[]> findExperienceDistribution();
 
+    @Query("SELECT e.department, u.role, COUNT(e.id) as count " +
+            "FROM EmployeeDetails e JOIN e.user u " +
+            "GROUP BY e.department, u.role")
+    List<Object[]> findEmployeeCountByDepartmentAndRole();
+
+
+
     /**
      * Get overtime statistics by department
      */

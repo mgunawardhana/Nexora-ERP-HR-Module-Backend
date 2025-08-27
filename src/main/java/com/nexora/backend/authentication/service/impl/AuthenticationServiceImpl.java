@@ -218,7 +218,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         List<Map<String, Object>> userDetailsList = usersPage.getContent().stream().map(user -> {
             Map<String, Object> userDetails = new HashMap<>();
-            userDetails.put("id", user.getId());
+            userDetails.put("userId", user.getId());
             userDetails.put("firstName", user.getFirstName());
             userDetails.put("lastName", user.getLastName());
             userDetails.put("email", user.getEmail());
@@ -302,7 +302,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private void revokeAllUserTokens(User user) {
-        var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getId());
+        var validUserTokens = tokenRepository.findAllValidTokenByUser(Integer.valueOf(user.getId()));
         if (validUserTokens.isEmpty()) {
             return;
         }

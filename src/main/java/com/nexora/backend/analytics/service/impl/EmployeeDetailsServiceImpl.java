@@ -42,21 +42,20 @@ public class EmployeeDetailsServiceImpl implements EmployeeDetailsService {
     }
 
 
-    //TODO: here
     @Override
     public Map<String, Map<String, Long>> getEmployeeCountByRoleAndOfficeLocation() {
-        List<Object[]> results = analyticsRepository.findGenderDistributionByDepartment();
-        Map<String, Map<String, Long>> locationRoleCountMap = new HashMap<>();
+        List<Object[]> results = analyticsRepository.findEmployeeCountByDepartmentAndRole();
+        Map<String, Map<String, Long>> departmentRoleCountMap = new HashMap<>();
 
         for (Object[] result : results) {
-            Role role = (Role) result[0];
-            String officeLocation = (String) result[1];
-            Long count = (Long) result[2];
+            String department = (String) result[0]; // Department as the "location" proxy
+            Role role = (Role) result[1]; // Cast to Role enum
+            Long count = ((Number) result[2]).longValue(); // Convert count to Long
 
-            locationRoleCountMap.computeIfAbsent(officeLocation, k -> new HashMap<>()).put(role.name(), count);
+            departmentRoleCountMap.computeIfAbsent(department, k -> new HashMap<>()).put(role.name(), count);
         }
 
-        return locationRoleCountMap;
+        return departmentRoleCountMap;
     }
 
     @Override

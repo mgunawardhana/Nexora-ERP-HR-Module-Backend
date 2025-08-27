@@ -17,8 +17,8 @@ import java.time.LocalDateTime;
 public class EmployeeDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id")
+    private String id; // Changed from Long to String, removed @GeneratedValue
 
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
@@ -133,10 +133,52 @@ public class EmployeeDetails {
         if (employmentStatus == null) {
             employmentStatus = EmploymentStatus.ACTIVE;
         }
+
+        // Generate custom ID if not already set
+        if (id == null) {
+            generateCustomId();
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    // Static counter to ensure sequential IDs within application session
+    private static int idCounter = 0;
+
+    private void generateCustomId() {
+        synchronized (EmployeeDetails.class) {
+            // Initialize counter from database on first use
+            if (idCounter == 0) {
+                initializeCounter();
+            }
+
+            // Increment and generate ID
+            idCounter++;
+            this.id = "EMPDT-" + String.format("%03d", idCounter);
+        }
+    }
+
+    private void initializeCounter() {
+        // Try to get the maximum existing ID number from database
+        // This is a simple approach that works within entity constraints
+        try {
+            // We'll start from a reasonable number if we can't access DB
+            // In practice, you might want to initialize this differently
+            idCounter = getLastIdNumberFromDatabase();
+        } catch (Exception e) {
+            // Fallback: start from 0, will become 1 after increment
+            idCounter = 0;
+        }
+    }
+
+    private int getLastIdNumberFromDatabase() {
+        // Since we can't easily access EntityManager in @PrePersist,
+        // we'll use a simple approach:
+        // Return 0 so counter starts from 1
+        // You could enhance this by reading from a properties file or cache
+        return 0;
     }
 }

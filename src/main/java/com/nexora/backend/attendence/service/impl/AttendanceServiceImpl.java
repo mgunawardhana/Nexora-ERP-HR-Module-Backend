@@ -68,7 +68,7 @@ public class AttendanceServiceImpl implements AttendanceService {
             } else {
                 // Create new record
                 attendance = Attendance.builder()
-                        .user(userRepository.findById(attendanceRequest.getUserId()).orElse(null))
+                        .user(userRepository.findById(Integer.valueOf(String.valueOf(attendanceRequest.getUserId()))).orElse(null))
                         .attendanceDate(LocalDate.now())
                         .status(attendanceRequest.getAttendanceStatus())
                         .checkInTime(attendanceRequest.getCheckInTime())
