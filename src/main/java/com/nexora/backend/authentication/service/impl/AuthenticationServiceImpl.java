@@ -36,7 +36,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @Slf4j
 @Service
@@ -91,14 +90,42 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             EmployeeDetails employeeDetails = EmployeeDetails.builder()
                     .user(savedUser)
                     .employeeName(registrationRequest.getFirstName() + " " + registrationRequest.getLastName())
+                    .nationalId(registrationRequest.getNationalId())
+                    .phoneNumber(registrationRequest.getPhoneNumber())
+                    .employeeCode(registrationRequest.getEmployeeCode())
                     .department(registrationRequest.getDepartment())
                     .jobRole(registrationRequest.getDesignation())
+                    .joinDate(registrationRequest.getJoinDate())
                     .monthlyIncome(registrationRequest.getCurrentSalary())
+                    .emergencyContactName(registrationRequest.getEmergencyContactName())
+                    .emergencyContactPhone(registrationRequest.getEmergencyContactPhone())
+                    .dateOfBirth(registrationRequest.getDateOfBirth())
+                    .bankAccountNumber(registrationRequest.getBankAccountNumber())
+                    .bankName(registrationRequest.getBankName())
+                    .taxId(registrationRequest.getTaxId())
+                    .managerId(registrationRequest.getManagerId())
+                    .teamSize(registrationRequest.getTeamSize())
+                    .specialization(registrationRequest.getSpecialization())
+                    .contractStartDate(registrationRequest.getContractStartDate())
+                    .contractEndDate(registrationRequest.getContractEndDate())
                     .hourlyRate(registrationRequest.getHourlyRate())
+                    .certifications(registrationRequest.getCertifications())
                     .educationField(registrationRequest.getEducationLevel())
+                    .university(registrationRequest.getUniversity())
+                    .graduationYear(registrationRequest.getGraduationYear())
                     .totalWorkingYears(registrationRequest.getPreviousExperienceYears())
                     .employmentStatus(registrationRequest.getEmploymentStatus())
+                    .probationEndDate(registrationRequest.getProbationEndDate())
+                    .shiftTimings(registrationRequest.getShiftTimings())
+                    .accessLevel(registrationRequest.getAccessLevel())
+                    .budgetAuthority(registrationRequest.getBudgetAuthority())
+                    .salesTarget(registrationRequest.getSalesTarget())
+                    .commissionRate(registrationRequest.getCommissionRate())
+                    .internDurationMonths(registrationRequest.getInternDurationMonths())
+                    .mentorId(registrationRequest.getMentorId())
                     .officeLocation(registrationRequest.getOfficeLocation())
+                    .workMode(registrationRequest.getWorkMode())
+                    .notes(registrationRequest.getNotes())
                     .build();
 
             log.info("Saving employee details for user: {}", savedUser.getEmail());
@@ -199,36 +226,42 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             employeeDetailsRepository.findByUser(user).ifPresent(employeeDetails -> {
                 userDetails.put("employeeName", employeeDetails.getEmployeeName());
-                userDetails.put("age", employeeDetails.getAge());
-                userDetails.put("businessTravel", employeeDetails.getBusinessTravel());
-                userDetails.put("dailyRate", employeeDetails.getDailyRate());
+                userDetails.put("nationalId", employeeDetails.getNationalId());
+                userDetails.put("phoneNumber", employeeDetails.getPhoneNumber());
+                userDetails.put("employeeCode", employeeDetails.getEmployeeCode());
                 userDetails.put("department", employeeDetails.getDepartment());
-                userDetails.put("distanceFromHome", employeeDetails.getDistanceFromHome());
-                userDetails.put("education", employeeDetails.getEducation());
-                userDetails.put("educationField", employeeDetails.getEducationField());
-                userDetails.put("environmentSatisfaction", employeeDetails.getEnvironmentSatisfaction());
-                userDetails.put("gender", employeeDetails.getGender());
-                userDetails.put("hourlyRate", employeeDetails.getHourlyRate());
-                userDetails.put("jobInvolvement", employeeDetails.getJobInvolvement());
-                userDetails.put("jobLevel", employeeDetails.getJobLevel());
                 userDetails.put("jobRole", employeeDetails.getJobRole());
-                userDetails.put("jobSatisfaction", employeeDetails.getJobSatisfaction());
-                userDetails.put("maritalStatus", employeeDetails.getMaritalStatus());
+                userDetails.put("joinDate", employeeDetails.getJoinDate());
                 userDetails.put("monthlyIncome", employeeDetails.getMonthlyIncome());
-                userDetails.put("monthlyRate", employeeDetails.getMonthlyRate());
-                userDetails.put("numCompaniesWorked", employeeDetails.getNumCompaniesWorked());
-                userDetails.put("overTime", employeeDetails.getOverTime());
-                userDetails.put("relationshipSatisfaction", employeeDetails.getRelationshipSatisfaction());
-                userDetails.put("stockOptionLevel", employeeDetails.getStockOptionLevel());
+                userDetails.put("emergencyContactName", employeeDetails.getEmergencyContactName());
+                userDetails.put("emergencyContactPhone", employeeDetails.getEmergencyContactPhone());
+                userDetails.put("dateOfBirth", employeeDetails.getDateOfBirth());
+                userDetails.put("bankAccountNumber", employeeDetails.getBankAccountNumber());
+                userDetails.put("bankName", employeeDetails.getBankName());
+                userDetails.put("taxId", employeeDetails.getTaxId());
+                userDetails.put("managerId", employeeDetails.getManagerId());
+                userDetails.put("teamSize", employeeDetails.getTeamSize());
+                userDetails.put("specialization", employeeDetails.getSpecialization());
+                userDetails.put("contractStartDate", employeeDetails.getContractStartDate());
+                userDetails.put("contractEndDate", employeeDetails.getContractEndDate());
+                userDetails.put("hourlyRate", employeeDetails.getHourlyRate());
+                userDetails.put("certifications", employeeDetails.getCertifications());
+                userDetails.put("educationField", employeeDetails.getEducationField());
+                userDetails.put("university", employeeDetails.getUniversity());
+                userDetails.put("graduationYear", employeeDetails.getGraduationYear());
                 userDetails.put("totalWorkingYears", employeeDetails.getTotalWorkingYears());
-                userDetails.put("trainingTimesLastYear", employeeDetails.getTrainingTimesLastYear());
-                userDetails.put("workLifeBalance", employeeDetails.getWorkLifeBalance());
-                userDetails.put("yearsAtCompany", employeeDetails.getYearsAtCompany());
-                userDetails.put("yearsInCurrentRole", employeeDetails.getYearsInCurrentRole());
-                userDetails.put("yearsSinceLastPromotion", employeeDetails.getYearsSinceLastPromotion());
-                userDetails.put("yearsWithCurrManager", employeeDetails.getYearsWithCurrManager());
                 userDetails.put("employmentStatus", employeeDetails.getEmploymentStatus());
+                userDetails.put("probationEndDate", employeeDetails.getProbationEndDate());
+                userDetails.put("shiftTimings", employeeDetails.getShiftTimings());
+                userDetails.put("accessLevel", employeeDetails.getAccessLevel());
+                userDetails.put("budgetAuthority", employeeDetails.getBudgetAuthority());
+                userDetails.put("salesTarget", employeeDetails.getSalesTarget());
+                userDetails.put("commissionRate", employeeDetails.getCommissionRate());
+                userDetails.put("internDurationMonths", employeeDetails.getInternDurationMonths());
+                userDetails.put("mentorId", employeeDetails.getMentorId());
                 userDetails.put("officeLocation", employeeDetails.getOfficeLocation());
+                userDetails.put("workMode", employeeDetails.getWorkMode());
+                userDetails.put("notes", employeeDetails.getNotes());
                 userDetails.put("createdAt", employeeDetails.getCreatedAt());
                 userDetails.put("updatedAt", employeeDetails.getUpdatedAt());
             });
