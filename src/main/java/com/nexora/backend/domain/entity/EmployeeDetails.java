@@ -3,10 +3,7 @@ package com.nexora.backend.domain.entity;
 import com.nexora.backend.domain.enums.EmploymentStatus;
 import com.nexora.backend.domain.enums.WorkMode;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -17,6 +14,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@Setter
+@Getter
 @Table(name = "employee_details")
 public class EmployeeDetails {
 
