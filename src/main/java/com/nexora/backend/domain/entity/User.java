@@ -25,8 +25,8 @@ import java.util.Collection;
 public class User implements UserDetails {
 
     @Id
-    @Column(name = "id")
-    private String id; // Changed from Integer to String, removed @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
     @NotBlank(message = "First name is mandatory")
     private String firstName;
@@ -48,50 +48,6 @@ public class User implements UserDetails {
 
     @Column(name = "user_profile_pic")
     private String userProfilePic;
-
-    // Static counter to ensure sequential IDs within application session
-    private static int idCounter = 0;
-
-    @PrePersist
-    protected void onCreate() {
-        // Generate custom ID if not already set
-        if (id == null) {
-            generateCustomId();
-        }
-    }
-
-    private void generateCustomId() {
-        synchronized (User.class) {
-            // Initialize counter from database on first use
-            if (idCounter == 0) {
-                initializeCounter();
-            }
-
-            // Increment and generate ID
-            idCounter++;
-            this.id = "EMPID-" + String.format("%03d", idCounter);
-        }
-    }
-
-    private void initializeCounter() {
-        // Try to get the maximum existing ID number from database
-        try {
-            // We'll start from a reasonable number if we can't access DB
-            // In practice, you might want to initialize this differently
-            idCounter = getLastIdNumberFromDatabase();
-        } catch (Exception e) {
-            // Fallback: start from 0, will become 1 after increment
-            idCounter = 0;
-        }
-    }
-
-    private int getLastIdNumberFromDatabase() {
-        // Since we can't easily access EntityManager in @PrePersist,
-        // we'll use a simple approach:
-        // Return 0 so counter starts from 1
-        // You could enhance this by reading from a properties file or cache
-        return 0;
-    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
