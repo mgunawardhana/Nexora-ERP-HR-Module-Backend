@@ -2,13 +2,16 @@ package com.nexora.backend.model.service.impl;
 
 import com.nexora.backend.authentication.repository.EmployeeDetailsRepository;
 import com.nexora.backend.domain.entity.EmployeeDetails;
+import com.nexora.backend.domain.response.APIResponse;
 import com.nexora.backend.domain.response.dto.PredictionResponse;
 import com.nexora.backend.model.service.ModelService;
+import com.nexora.backend.util.ResponseUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import java.util.Optional;
 
@@ -19,85 +22,116 @@ public class ModelServiceImpl implements ModelService {
 
     private final EmployeeDetailsRepository employeeDetailsRepository;
     private final WebClient webClient;
+    private final ResponseUtil responseUtil;
 
     @Override
-    public Mono<PredictionResponse> getPredictionForEmployee(Integer userId) {
-        Optional<EmployeeDetails> employeeDetailsOpt = employeeDetailsRepository.findByUserId(userId);
+    public ResponseEntity<APIResponse> getPredictionForEmployee(Integer userId) {
+        try {
+            Optional<EmployeeDetails> employeeDetailsOpt = employeeDetailsRepository.findByUserId(userId);
 
-        if (employeeDetailsOpt.isEmpty()) {
-            log.error("Employee not found with user ID: {}", userId);
-            return Mono.error(new RuntimeException("Employee not found with user ID: " + userId));
+            if (employeeDetailsOpt.isEmpty()) {
+                log.error("Employee not found with user ID: {}", userId);
+                return responseUtil.wrapError(
+                        "Employee not found with user ID: " + userId,
+                        "EMPLOYEE_NOT_FOUND",
+                        HttpStatus.NOT_FOUND
+                );
+            }
+
+            EmployeeDetails employeeDetails = employeeDetailsOpt.get();
+            log.info("Fetching prediction for employee: {}", employeeDetails.getEmployeeName());
+
+            // ---------- BUILD REQUEST BODY ----------
+            var requestBody = new PredictionRequest(
+                    employeeDetails.getEmployeeName(),
+                    employeeDetails.getAge(),
+                    employeeDetails.getBusinessTravel(),
+                    employeeDetails.getDailyRate() != null ? employeeDetails.getDailyRate().doubleValue() : null,
+                    employeeDetails.getDepartment(),
+                    employeeDetails.getDistanceFromHome(),
+                    employeeDetails.getEducation(),          // numeric 1–5
+                    employeeDetails.getEducationField(),     // string like "Life Sciences"
+                    employeeDetails.getEnvironmentSatisfaction(),
+                    employeeDetails.getGender(),
+                    employeeDetails.getHourlyRate() != null ? employeeDetails.getHourlyRate().doubleValue() : null,
+                    employeeDetails.getJobInvolvement(),
+                    employeeDetails.getJobLevel(),
+                    employeeDetails.getJobRole(),
+                    employeeDetails.getJobSatisfaction(),
+                    employeeDetails.getMaritalStatus(),
+                    employeeDetails.getMonthlyIncome() != null ? employeeDetails.getMonthlyIncome().doubleValue() : null,
+                    employeeDetails.getMonthlyRate() != null ? employeeDetails.getMonthlyRate().doubleValue() : null,
+                    employeeDetails.getNumCompaniesWorked(),
+                    employeeDetails.getOverTime(),
+                    employeeDetails.getRelationshipSatisfaction(),
+                    employeeDetails.getStockOptionLevel(),
+                    employeeDetails.getTotalWorkingYears(),
+                    employeeDetails.getTrainingTimesLastYear(),
+                    employeeDetails.getWorkLifeBalance(),
+                    employeeDetails.getYearsAtCompany(),
+                    employeeDetails.getYearsInCurrentRole(),
+                    employeeDetails.getYearsSinceLastPromotion(),
+                    employeeDetails.getYearsWithCurrManager()
+            );
+
+            // ---------- CALL PYTHON MODEL ----------
+            PredictionResponse predictionResponse = webClient.post()
+                    .uri("http://localhost:8000/hr/predict")
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .bodyToMono(PredictionResponse.class)
+                    .doOnNext(raw -> log.info("✅ Raw prediction response: {}", raw))
+                    .doOnSuccess(response ->
+                            log.info("✅ Successfully received prediction for employee: {}", employeeDetails.getEmployeeName()))
+                    .doOnError(error ->
+                            log.error("❌ Error fetching prediction for employee {}: {}",
+                                    employeeDetails.getEmployeeName(), error.getMessage()))
+                    .block(); // Convert Mono to synchronous call
+
+            if (predictionResponse == null) {
+                log.error("Received null response from prediction service for employee: {}", employeeDetails.getEmployeeName());
+                return responseUtil.wrapError(
+                        "Failed to get prediction from external service",
+                        "PREDICTION_SERVICE_ERROR",
+                        HttpStatus.SERVICE_UNAVAILABLE
+                );
+            }
+
+            log.info("✅ Prediction successful for employee: {}", employeeDetails.getEmployeeName());
+            return responseUtil.wrapSuccess(predictionResponse, HttpStatus.OK);
+
+        } catch (Exception e) {
+            log.error("❌ Unexpected error while getting prediction for user ID {}: {}", userId, e.getMessage(), e);
+            return responseUtil.wrapError(
+                    "An unexpected error occurred while processing the prediction request",
+                    "INTERNAL_SERVER_ERROR",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
-
-        EmployeeDetails employeeDetails = employeeDetailsOpt.get();
-        log.info("Fetching prediction for employee: {}", employeeDetails.getEmployeeName());
-
-        // Prepare the request body from EmployeeDetails
-        var requestBody = new PredictionRequest(
-                employeeDetails.getEmployeeName(),
-                employeeDetails.getAge(),
-                employeeDetails.getBusinessTravel(),
-                employeeDetails.getDailyRate(),
-                employeeDetails.getDepartment(),
-                employeeDetails.getDistanceFromHome(),
-                employeeDetails.getEducation(),
-                employeeDetails.getEducationField(),
-                employeeDetails.getEnvironmentSatisfaction(),
-                employeeDetails.getGender(),
-                employeeDetails.getHourlyRate(),
-                employeeDetails.getJobInvolvement(),
-                employeeDetails.getJobLevel(),
-                employeeDetails.getJobRole(),
-                employeeDetails.getJobSatisfaction(),
-                employeeDetails.getMaritalStatus(),
-                employeeDetails.getMonthlyIncome(),
-                employeeDetails.getMonthlyRate(),
-                employeeDetails.getNumCompaniesWorked(),
-                employeeDetails.getOverTime(),
-                employeeDetails.getRelationshipSatisfaction(),
-                employeeDetails.getStockOptionLevel(),
-                employeeDetails.getTotalWorkingYears(),
-                employeeDetails.getTrainingTimesLastYear(),
-                employeeDetails.getWorkLifeBalance(),
-                employeeDetails.getYearsAtCompany(),
-                employeeDetails.getYearsInCurrentRole(),
-                employeeDetails.getYearsSinceLastPromotion(),
-                employeeDetails.getYearsWithCurrManager()
-        );
-
-        // Make the API call using WebClient
-        return webClient.post()
-                .uri("http://localhost:8000/hr/predict")
-                .bodyValue(requestBody)
-                .retrieve()
-                .bodyToMono(PredictionResponse.class)
-                .doOnSuccess(response ->
-                        log.info("Successfully received prediction for employee: {}", employeeDetails.getEmployeeName()))
-                .doOnError(error ->
-                        log.error("Error fetching prediction for employee {}: {}",
-                                employeeDetails.getEmployeeName(), error.getMessage()));
     }
 
-    // Inner class to represent the request body
+    /**
+     * Inner record to represent the request body sent to the Python prediction API.
+     */
     private record PredictionRequest(
             String employee_name,
             Integer Age,
             String BusinessTravel,
-            Integer DailyRate,
+            Double DailyRate,
             String Department,
             Integer DistanceFromHome,
             Integer Education,
             String EducationField,
             Integer EnvironmentSatisfaction,
             String Gender,
-            Integer HourlyRate,
+            Double HourlyRate,
             Integer JobInvolvement,
             Integer JobLevel,
             String JobRole,
             Integer JobSatisfaction,
             String MaritalStatus,
-            Integer MonthlyIncome,
-            Integer MonthlyRate,
+            Double MonthlyIncome,
+            Double MonthlyRate,
             Integer NumCompaniesWorked,
             String OverTime,
             Integer RelationshipSatisfaction,

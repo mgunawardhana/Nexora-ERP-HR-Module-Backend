@@ -6,15 +6,18 @@ import lombok.Data;
 @Data
 public class PredictionResponse {
     private String status;
-    private Prediction prediction;
+
     @JsonProperty("employee_name")
-    private String employee_name;
+    private String employeeName;
+
+    private Prediction prediction;
 
     @Data
     public static class Prediction {
         @JsonProperty("performance_rating")
-        private int performance_rating;
-        private double confidence;
+        private Integer performanceRating;
+
+        private Double confidence;
         private String suggestions;
     }
 }

@@ -1,8 +1,8 @@
 package com.nexora.backend.model.service;
 
-import com.nexora.backend.domain.response.dto.PredictionResponse;
-import reactor.core.publisher.Mono;
+import com.nexora.backend.domain.response.APIResponse;
+import org.springframework.http.ResponseEntity;
 
 public interface ModelService {
-    Mono<PredictionResponse> getPredictionForEmployee(Integer userId);
+    ResponseEntity<APIResponse> getPredictionForEmployee(Integer userId);
 }
