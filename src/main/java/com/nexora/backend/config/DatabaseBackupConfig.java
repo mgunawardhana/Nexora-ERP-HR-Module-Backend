@@ -83,7 +83,7 @@ public class DatabaseBackupConfig {
     private String createBackupFile() throws IOException, InterruptedException {
         String dbName = extractDbNameFromUrl();
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss_SSS").format(new Date());
-        String backupFile = String.format("%s/megacity_backup_%s.sql", backupDirectory, timestamp);
+        String backupFile = String.format("%s/nexora_backup_%s.sql", backupDirectory, timestamp);
 
         log.debug("Attempting to create backup file: {}", backupFile);
 

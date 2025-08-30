@@ -26,7 +26,7 @@ import static com.nexora.backend.domain.enums.Role.*;
 import static org.springframework.http.HttpMethod.*;
 
 /**
- * Security configuration class for the MegaCity backend application.
+ * Security configuration class for the Nexora backend application.
  * Configures Spring Security with JWT authentication, role-based access control,
  * and CORS settings for the REST API.
  */

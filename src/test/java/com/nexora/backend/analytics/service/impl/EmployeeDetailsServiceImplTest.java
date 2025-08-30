@@ -44,7 +44,7 @@ class EmployeeDetailsServiceImplTest {
     }
 
     @Test
-    @DisplayName("✅ Success: Get Employee Count By Role")
+    @DisplayName("Success: Get Employee Count By Role")
     void getEmployeeCountByRole_Success() {
         when(analyticsRepository.findEmployeeCountByRole()).thenReturn(mockRoleCountData);
         Map<String, Long> result = employeeDetailsService.getEmployeeCountByRole();

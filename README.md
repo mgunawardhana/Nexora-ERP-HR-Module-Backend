@@ -2,9 +2,6 @@
 
 <div align="center">
 
-
-[![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=mgunawardhana_Mega-City-Cab-Service-Backend)
-
 </div>
 
 <div align="center">
