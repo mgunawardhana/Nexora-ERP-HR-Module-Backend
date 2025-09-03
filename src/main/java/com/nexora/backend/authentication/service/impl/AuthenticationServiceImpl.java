@@ -151,23 +151,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+                public AuthenticationResponse authenticate(AuthenticationRequest request) {
+                    authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
-        var user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new RuntimeException("User not found"));
-        var accessToken = jwtServiceImpl.generateToken(user);
-        var refreshToken = jwtServiceImpl.generateRefreshToken(user);
+                    var user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new RuntimeException("User not found"));
+                    var accessToken = jwtServiceImpl.generateToken(user);
+                    var refreshToken = jwtServiceImpl.generateRefreshToken(user);
 
-        revokeAllUserTokens(user);
-        saveUserToken(user, accessToken);
+                    revokeAllUserTokens(user);
+                    saveUserToken(user, accessToken);
 
-        return AuthenticationResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .userName(user.getFirstName() + " " + user.getLastName())
-                .role(String.valueOf(user.getRole()))
-                .build();
-    }
+                    return AuthenticationResponse.builder()
+                            .accessToken(accessToken)
+                            .refreshToken(refreshToken)
+                            .userName(user.getFirstName() + " " + user.getLastName())
+                            .email(user.getEmail())
+                            .role(String.valueOf(user.getRole()))
+                            .build();
+                }
 
     @Override
     public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {

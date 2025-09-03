@@ -4,6 +4,7 @@ import com.nexora.backend.attendence.repository.AttendanceRepository;
 import com.nexora.backend.attendence.service.AttendanceService;
 import com.nexora.backend.authentication.repository.UserRepository;
 import com.nexora.backend.domain.entity.Attendance;
+import com.nexora.backend.domain.entity.User;
 import com.nexora.backend.domain.request.AttendanceRequest;
 import com.nexora.backend.domain.response.APIResponse;
 import com.nexora.backend.util.ResponseUtil;
@@ -39,10 +40,26 @@ public class AttendanceServiceImpl implements AttendanceService {
      */
     @Override
     public ResponseEntity<APIResponse> markDailyAttendance(AttendanceRequest attendanceRequest) {
+
         try {
+            // Validate that email is provided in the request
+            if (attendanceRequest.getEmail() == null || attendanceRequest.getEmail().trim().isEmpty()) {
+                return responseUtil.wrapError("Email is required", "Please provide a valid email address",
+                        HttpStatus.BAD_REQUEST);
+            }
+
+            // Find user by email
+            User user = userRepository.findByEmail(attendanceRequest.getEmail())
+                    .orElse(null);
+
+            if (user == null) {
+                return responseUtil.wrapError("User not found", "No user found with the provided email: " + attendanceRequest.getEmail(),
+                        HttpStatus.NOT_FOUND);
+            }
+
             // Find existing attendance record for the user and current date
             Attendance existingAttendance = attendanceRepository.findByUserIdAndAttendanceDate(
-                    Long.valueOf(attendanceRequest.getUserId()), LocalDate.now()).orElse(null);
+                    Long.valueOf(user.getId()), LocalDate.now()).orElse(null);
 
             Attendance attendance;
 
@@ -65,10 +82,11 @@ public class AttendanceServiceImpl implements AttendanceService {
                         attendanceRequest.getCreatedAt() : existingAttendance.getCreatedAt());
 
                 attendance = existingAttendance;
+                log.info("Updating existing attendance for user: {}", user.getEmail());
             } else {
                 // Create new record
                 attendance = Attendance.builder()
-                        .user(userRepository.findById(Integer.valueOf(String.valueOf(attendanceRequest.getUserId()))).orElse(null))
+                        .user(user)
                         .attendanceDate(LocalDate.now())
                         .status(attendanceRequest.getAttendanceStatus())
                         .checkInTime(attendanceRequest.getCheckInTime())
@@ -79,16 +97,18 @@ public class AttendanceServiceImpl implements AttendanceService {
                         .dailyWorkingHours(attendanceRequest.getDailyWorkingHours())
                         .createdAt(attendanceRequest.getCreatedAt())
                         .build();
+
+                log.info("Creating new attendance record for user: {}", user.getEmail());
             }
 
             Attendance savedAttendance = attendanceRepository.save(attendance);
-            log.info("Attendance saved successfully: {}",savedAttendance);
+            log.info("Attendance saved successfully for user: {} with ID: {}", user.getEmail(), savedAttendance.getId());
 
-            return responseUtil.wrapSuccess("Attendance save successfully", HttpStatus.CREATED);
+            return responseUtil.wrapSuccess("Attendance saved successfully for user: " + user.getEmail(), HttpStatus.CREATED);
 
         } catch (Exception e) {
-            System.err.println("Error processing attendance: " + e.getMessage());
-            return responseUtil.wrapError("An error occurred while processing attendance: ", e.getMessage(),
+            log.error("Error processing attendance: {}", e.getMessage(), e);
+            return responseUtil.wrapError("An error occurred while processing attendance", e.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

@@ -31,7 +31,6 @@ public class AuthManagementController {
         return ResponseEntity.ok(authenticationService.register(registrationRequest));
     }
 
-
     @PostMapping("/authenticate")
     public ResponseEntity<AuthenticationResponse> login(@RequestBody AuthenticationRequest request) {
         log.info("AuthenticationRequest: {}", request.toString());

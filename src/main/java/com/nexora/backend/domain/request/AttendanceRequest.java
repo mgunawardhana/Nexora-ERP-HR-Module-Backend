@@ -17,6 +17,8 @@ public class AttendanceRequest {
 
     private Integer userId;
 
+    private String email;
+
     private LocalDate attendanceDate;
 
     private String attendanceStatus;

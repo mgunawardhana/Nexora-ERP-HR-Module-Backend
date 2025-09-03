@@ -18,20 +18,7 @@ public interface AnalyticsRepository extends JpaRepository<EmployeeDetails, Long
             "FROM EmployeeDetails e JOIN e.user u " +
             "GROUP BY u.role")
     List<Object[]> findEmployeeCountByRole();
-
-    /**
-     * Get employee count grouped by role and office location
-     * NOTE: This query is commented out because the 'officeLocation' field is missing from the EmployeeDetails entity.
-     * To use this, you first need to add the 'officeLocation' field to the EmployeeDetails entity.
-     */
-    /*
-    @Query("SELECT u.role, e.officeLocation, COUNT(e.id) as count " +
-           "FROM EmployeeDetails e JOIN e.user u " +
-           "GROUP BY u.role, e.officeLocation")
-    List<Object[]> findEmployeeCountByRoleAndOfficeLocation();
-    */
-
-    /**
+   /**
      * Get employee count grouped by role and employment status
      */
     @Query("SELECT u.role, e.employmentStatus, COUNT(e.id) as count " +

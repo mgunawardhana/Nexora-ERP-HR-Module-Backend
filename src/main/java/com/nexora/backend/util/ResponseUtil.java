@@ -38,7 +38,12 @@ public class ResponseUtil {
      * @return a {@link ResponseEntity} containing the constructed {@link APIResponse} with success details
      */
     public ResponseEntity<APIResponse> wrapSuccess(Object value, HttpStatus httpStatus) {
-        APIResponse apiResponse = APIResponse.builder().statusCode(StatusCode.SUCCESS.valueOf()).origin(servletRequest.getRequestURI()).statusMessage(StatusMessage.SUCCESS.valueOf()).responseTime(DateTimeUtils.format(new Date())).result(value).build();
+        APIResponse apiResponse = APIResponse.builder()
+                .statusCode(StatusCode.SUCCESS.valueOf())
+                .origin(servletRequest.getRequestURI())
+                .statusMessage(StatusMessage.SUCCESS.valueOf())
+                .responseTime(DateTimeUtils.format(new Date()))
+                .result(value).build();
         return ResponseEntity.status(httpStatus).body(apiResponse);
     }
 
@@ -51,7 +56,13 @@ public class ResponseUtil {
      * @return a {@link ResponseEntity} containing the constructed {@link APIResponse} with error details
      */
     public ResponseEntity<APIResponse> wrapError(Object value, String errorType, HttpStatus httpStatus) {
-        APIResponse apiResponse = APIResponse.builder().statusCode(StatusCode.FAILURE.valueOf()).statusMessage(StatusMessage.FAILURE.valueOf()).errorType(errorType).origin(servletRequest.getRequestURI()).responseTime(DateTimeUtils.format(new Date())).result(Collections.singletonMap(Constant.ERROR, value)).build();
+        APIResponse apiResponse = APIResponse.builder()
+                .statusCode(StatusCode.FAILURE.valueOf())
+                .statusMessage(StatusMessage.FAILURE.valueOf())
+                .errorType(errorType).origin(servletRequest.getRequestURI())
+                .responseTime(DateTimeUtils.format(new Date()))
+                .result(Collections.singletonMap(Constant.ERROR, value))
+                .build();
         return ResponseEntity.status(httpStatus).body(apiResponse);
     }
 }
