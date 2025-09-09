@@ -59,6 +59,7 @@ public class ModelServiceImpl implements ModelService {
 
             ResponseEntity<String> response = restTemplate.postForEntity(geminiApiUrl, entity, String.class);
 
+            log.error(response.getBody());
             return responseUtil.wrapSuccess(response.getBody(), HttpStatus.OK);
 
         } catch (Exception e) {
@@ -150,11 +151,6 @@ public class ModelServiceImpl implements ModelService {
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
-    }
-
-    @Override
-    public ResponseEntity<APIResponse> getGeminiForAdvancedDecision(GeminiApiRequest request) {
-        return null;
     }
 
     /**

@@ -7,5 +7,5 @@ import org.springframework.http.ResponseEntity;
 public interface ModelService {
     ResponseEntity<APIResponse> getPredictionForEmployee(Integer userId);
 
-    ResponseEntity<APIResponse> getGeminiForAdvancedDecision(GeminiApiRequest request);
+    ResponseEntity<APIResponse> getGeminiForAdvancedDecision(String prompt);
 }

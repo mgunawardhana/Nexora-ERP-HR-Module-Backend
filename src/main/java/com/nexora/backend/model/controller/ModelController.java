@@ -23,7 +23,7 @@ public class ModelController {
     }
 
     @GetMapping("/gemini-for/advanced/decision")
-    public ResponseEntity<APIResponse> getGeminiForAdvancedDecision(GeminiApiRequest request) {
-        return modelService.getGeminiForAdvancedDecision(request);
+    public ResponseEntity<APIResponse> getGeminiForAdvancedDecision(String prompt) {
+        return modelService.getGeminiForAdvancedDecision(prompt);
     }
 }
