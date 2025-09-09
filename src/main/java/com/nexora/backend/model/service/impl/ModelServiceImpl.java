@@ -2,6 +2,7 @@ package com.nexora.backend.model.service.impl;
 
 import com.nexora.backend.authentication.repository.EmployeeDetailsRepository;
 import com.nexora.backend.domain.entity.EmployeeDetails;
+import com.nexora.backend.domain.request.GeminiApiRequest;
 import com.nexora.backend.domain.response.APIResponse;
 import com.nexora.backend.domain.response.dto.PredictionResponse;
 import com.nexora.backend.model.service.ModelService;
@@ -23,6 +24,14 @@ public class ModelServiceImpl implements ModelService {
     private final EmployeeDetailsRepository employeeDetailsRepository;
     private final WebClient webClient;
     private final ResponseUtil responseUtil;
+
+    @Override
+    public ResponseEntity<APIResponse> getGeminiForAdvancedDecision(GeminiApiRequest request) {
+        String prompt = String.format("Please enter your employee ID: %s", request.getEmployeeId());
+
+
+        return null;
+    }
 
     @Override
     public ResponseEntity<APIResponse> getPredictionForEmployee(Integer userId) {

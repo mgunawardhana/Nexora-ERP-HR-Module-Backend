@@ -1,5 +1,6 @@
 package com.nexora.backend.model.controller;
 
+import com.nexora.backend.domain.request.GeminiApiRequest;
 import com.nexora.backend.domain.response.APIResponse;
 import com.nexora.backend.model.service.ModelService;
 import lombok.RequiredArgsConstructor;
@@ -19,5 +20,10 @@ public class ModelController {
     @GetMapping("/predict/{id}")
     public ResponseEntity<APIResponse> predict(@PathVariable Integer id) {
         return modelService.getPredictionForEmployee(id);
+    }
+
+    @GetMapping("/gemini-for/advanced/decision")
+    public ResponseEntity<APIResponse> getGeminiForAdvancedDecision(GeminiApiRequest request) {
+        return modelService.getGeminiForAdvancedDecision(request);
     }
 }
