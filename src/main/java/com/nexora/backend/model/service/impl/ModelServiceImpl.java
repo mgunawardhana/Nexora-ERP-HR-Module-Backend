@@ -9,11 +9,16 @@ import com.nexora.backend.model.service.ModelService;
 import com.nexora.backend.util.ResponseUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.Collections;
 import java.util.Optional;
 
 @Slf4j
@@ -24,13 +29,41 @@ public class ModelServiceImpl implements ModelService {
     private final EmployeeDetailsRepository employeeDetailsRepository;
     private final WebClient webClient;
     private final ResponseUtil responseUtil;
+    private final RestTemplate restTemplate;
 
-    @Override
-    public ResponseEntity<APIResponse> getGeminiForAdvancedDecision(GeminiApiRequest request) {
-        String prompt = String.format("Please enter your employee ID: %s", request.getEmployeeId());
+    @Value("${gemini.api.url}")
+    private String geminiApiUrl;
 
+    @Value("${gemini.api.key}")
+    private String geminiApiKey;
 
-        return null;
+    public ResponseEntity<APIResponse> getGeminiForAdvancedDecision(String prompt) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Content-Type", "application/json");
+            headers.set("X-goog-api-key", geminiApiKey);
+
+            GeminiApiRequest.Part part = GeminiApiRequest.Part.builder()
+                    .text(prompt)
+                    .build();
+
+            GeminiApiRequest.Content content = GeminiApiRequest.Content.builder()
+                    .parts(Collections.singletonList(part))
+                    .build();
+
+            GeminiApiRequest request = GeminiApiRequest.builder()
+                    .contents(Collections.singletonList(content))
+                    .build();
+
+            HttpEntity<GeminiApiRequest> entity = new HttpEntity<>(request, headers);
+
+            ResponseEntity<String> response = restTemplate.postForEntity(geminiApiUrl, entity, String.class);
+
+            return responseUtil.wrapSuccess(response.getBody(), HttpStatus.OK);
+
+        } catch (Exception e) {
+            return responseUtil.wrapError("Error communicating with Gemini API", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @Override
@@ -117,6 +150,11 @@ public class ModelServiceImpl implements ModelService {
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
+    }
+
+    @Override
+    public ResponseEntity<APIResponse> getGeminiForAdvancedDecision(GeminiApiRequest request) {
+        return null;
     }
 
     /**

@@ -2,19 +2,32 @@
 package com.nexora.backend.domain.request;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
-@NoArgsConstructor
+@Builder
 @AllArgsConstructor
+@NoArgsConstructor
 public class GeminiApiRequest {
-    private String employee;
-    private String basicSuggestion;
-    private String employeeId;
-    private Double monthlySalary;
-    private String gender;
-    private Double performancePredictionValue;
+    private List<Content> contents;
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class Content {
+        private List<Part> parts;
+    }
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class Part {
+        private String text;
+    }
 }
