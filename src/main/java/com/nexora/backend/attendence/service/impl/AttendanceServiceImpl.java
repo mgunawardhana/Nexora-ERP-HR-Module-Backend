@@ -13,6 +13,9 @@ import com.nexora.backend.domain.response.SuggestionSaveRequest;
 import com.nexora.backend.util.ResponseUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
@@ -50,59 +53,37 @@ public class AttendanceServiceImpl implements AttendanceService {
         try {
             // Validate that email is provided in the request
             if (attendanceRequest.getEmail() == null || attendanceRequest.getEmail().trim().isEmpty()) {
-                return responseUtil.wrapError("Email is required", "Please provide a valid email address",
-                        HttpStatus.BAD_REQUEST);
+                return responseUtil.wrapError("Email is required", "Please provide a valid email address", HttpStatus.BAD_REQUEST);
             }
 
             // Find user by email
-            User user = userRepository.findByEmail(attendanceRequest.getEmail())
-                    .orElse(null);
+            User user = userRepository.findByEmail(attendanceRequest.getEmail()).orElse(null);
 
             if (user == null) {
-                return responseUtil.wrapError("User not found", "No user found with the provided email: " + attendanceRequest.getEmail(),
-                        HttpStatus.NOT_FOUND);
+                return responseUtil.wrapError("User not found", "No user found with the provided email: " + attendanceRequest.getEmail(), HttpStatus.NOT_FOUND);
             }
 
             // Find existing attendance record for the user and current date
-            Attendance existingAttendance = attendanceRepository.findByUserIdAndAttendanceDate(
-                    Long.valueOf(user.getId()), LocalDate.now()).orElse(null);
+            Attendance existingAttendance = attendanceRepository.findByUserIdAndAttendanceDate(Long.valueOf(user.getId()), LocalDate.now()).orElse(null);
 
             Attendance attendance;
 
             if (existingAttendance != null) {
                 // Update existing record
                 existingAttendance.setStatus(attendanceRequest.getAttendanceStatus());
-                existingAttendance.setCheckInTime(attendanceRequest.getCheckInTime() != null ?
-                        attendanceRequest.getCheckInTime() : existingAttendance.getCheckInTime());
-                existingAttendance.setLunchOutTime(attendanceRequest.getLunchOutTime() != null ?
-                        attendanceRequest.getLunchOutTime() : existingAttendance.getLunchOutTime());
-                existingAttendance.setLunchInTime(attendanceRequest.getLunchInTime() != null ?
-                        attendanceRequest.getLunchInTime() : existingAttendance.getLunchInTime());
-                existingAttendance.setCheckOutTime(attendanceRequest.getCheckOutTime() != null ?
-                        attendanceRequest.getCheckOutTime() : existingAttendance.getCheckOutTime());
-                existingAttendance.setNotes(attendanceRequest.getNotes() != null ?
-                        attendanceRequest.getNotes() : existingAttendance.getNotes());
-                existingAttendance.setDailyWorkingHours(attendanceRequest.getDailyWorkingHours() != null ?
-                        attendanceRequest.getDailyWorkingHours() : existingAttendance.getDailyWorkingHours());
-                existingAttendance.setCreatedAt(attendanceRequest.getCreatedAt() != null ?
-                        attendanceRequest.getCreatedAt() : existingAttendance.getCreatedAt());
+                existingAttendance.setCheckInTime(attendanceRequest.getCheckInTime() != null ? attendanceRequest.getCheckInTime() : existingAttendance.getCheckInTime());
+                existingAttendance.setLunchOutTime(attendanceRequest.getLunchOutTime() != null ? attendanceRequest.getLunchOutTime() : existingAttendance.getLunchOutTime());
+                existingAttendance.setLunchInTime(attendanceRequest.getLunchInTime() != null ? attendanceRequest.getLunchInTime() : existingAttendance.getLunchInTime());
+                existingAttendance.setCheckOutTime(attendanceRequest.getCheckOutTime() != null ? attendanceRequest.getCheckOutTime() : existingAttendance.getCheckOutTime());
+                existingAttendance.setNotes(attendanceRequest.getNotes() != null ? attendanceRequest.getNotes() : existingAttendance.getNotes());
+                existingAttendance.setDailyWorkingHours(attendanceRequest.getDailyWorkingHours() != null ? attendanceRequest.getDailyWorkingHours() : existingAttendance.getDailyWorkingHours());
+                existingAttendance.setCreatedAt(attendanceRequest.getCreatedAt() != null ? attendanceRequest.getCreatedAt() : existingAttendance.getCreatedAt());
 
                 attendance = existingAttendance;
                 log.info("Updating existing attendance for user: {}", user.getEmail());
             } else {
                 // Create new record
-                attendance = Attendance.builder()
-                        .user(user)
-                        .attendanceDate(LocalDate.now())
-                        .status(attendanceRequest.getAttendanceStatus())
-                        .checkInTime(attendanceRequest.getCheckInTime())
-                        .lunchOutTime(attendanceRequest.getLunchOutTime())
-                        .lunchInTime(attendanceRequest.getLunchInTime())
-                        .checkOutTime(attendanceRequest.getCheckOutTime())
-                        .notes(attendanceRequest.getNotes())
-                        .dailyWorkingHours(attendanceRequest.getDailyWorkingHours())
-                        .createdAt(attendanceRequest.getCreatedAt())
-                        .build();
+                attendance = Attendance.builder().user(user).attendanceDate(LocalDate.now()).status(attendanceRequest.getAttendanceStatus()).checkInTime(attendanceRequest.getCheckInTime()).lunchOutTime(attendanceRequest.getLunchOutTime()).lunchInTime(attendanceRequest.getLunchInTime()).checkOutTime(attendanceRequest.getCheckOutTime()).notes(attendanceRequest.getNotes()).dailyWorkingHours(attendanceRequest.getDailyWorkingHours()).createdAt(attendanceRequest.getCreatedAt()).build();
 
                 log.info("Creating new attendance record for user: {}", user.getEmail());
             }
@@ -114,25 +95,25 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         } catch (Exception e) {
             log.error("Error processing attendance: {}", e.getMessage(), e);
-            return responseUtil.wrapError("An error occurred while processing attendance", e.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
+            return responseUtil.wrapError("An error occurred while processing attendance", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @Override
     public ResponseEntity<APIResponse> saveSuggestions(SuggestionSaveRequest suggestionSaveRequest) {
 
-        EmployeeSuggestion suggestion = EmployeeSuggestion.builder()
-                .firstName(suggestionSaveRequest.firstName)
-                .lastName(suggestionSaveRequest.lastName)
-                .fullName(suggestionSaveRequest.firstName + " " + suggestionSaveRequest.lastName)
-                .department(suggestionSaveRequest.department)
-                .employeeCode(suggestionSaveRequest.employeeCode)
-                .suggestion(suggestionSaveRequest.suggestion)
-                .build();
+        EmployeeSuggestion suggestion = EmployeeSuggestion.builder().firstName(suggestionSaveRequest.firstName).lastName(suggestionSaveRequest.lastName).fullName(suggestionSaveRequest.firstName + " " + suggestionSaveRequest.lastName).department(suggestionSaveRequest.department).employeeCode(suggestionSaveRequest.employeeCode).suggestion(suggestionSaveRequest.suggestion).build();
 
         suggestionsRepo.save(suggestion);
         log.info("Suggestion saved for employee: {} {}", suggestionSaveRequest.firstName, suggestionSaveRequest.lastName);
         return responseUtil.wrapSuccess("Suggestion saved successfully", HttpStatus.CREATED);
+    }
+
+    @Override
+    public ResponseEntity<APIResponse> fetchSuggestions(Integer page, Integer size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<EmployeeSuggestion> suggestionsPage = suggestionsRepo.findAll(pageable);
+
+        return responseUtil.wrapSuccess(suggestionsPage.getContent(), HttpStatus.OK);
     }
 }

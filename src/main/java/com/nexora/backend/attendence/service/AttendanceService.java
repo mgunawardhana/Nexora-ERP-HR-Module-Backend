@@ -10,4 +10,6 @@ public interface AttendanceService {
     ResponseEntity<APIResponse> markDailyAttendance(AttendanceRequest attendanceRequest);
 
     ResponseEntity<APIResponse> saveSuggestions(SuggestionSaveRequest suggestionSaveRequest);
+
+    ResponseEntity<APIResponse> fetchSuggestions(Integer page, Integer size);
 }

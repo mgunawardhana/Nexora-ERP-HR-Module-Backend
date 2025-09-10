@@ -31,4 +31,14 @@ public class AttendanceController {
     public ResponseEntity<APIResponse> saveSuggestions(@RequestBody SuggestionSaveRequest request) {
         return attendanceService.saveSuggestions(request);
     }
+
+
+    @PostMapping("/fetch-suggestions")
+    public ResponseEntity<APIResponse> getAllUsers(
+            @RequestParam Integer page,
+            @RequestParam Integer size) {
+        log.info("Get All Users");
+        return attendanceService.fetchSuggestions(page, size);
+    }
+
 }
