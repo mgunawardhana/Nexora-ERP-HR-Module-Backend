@@ -1,4 +1,3 @@
-// domain/request/GeminiApiRequest.java
 package com.nexora.backend.domain.request;
 
 import lombok.AllArgsConstructor;
@@ -21,6 +20,7 @@ public class GeminiApiRequest {
     @NoArgsConstructor
     public static class Content {
         private List<Part> parts;
+        private String role; // It's good practice to define the role of the content creator.
     }
 
     @Data

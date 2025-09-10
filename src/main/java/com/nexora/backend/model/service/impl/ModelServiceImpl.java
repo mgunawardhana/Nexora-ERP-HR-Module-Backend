@@ -4,6 +4,7 @@ import com.nexora.backend.authentication.repository.EmployeeDetailsRepository;
 import com.nexora.backend.domain.entity.EmployeeDetails;
 import com.nexora.backend.domain.request.GeminiApiRequest;
 import com.nexora.backend.domain.response.APIResponse;
+import com.nexora.backend.domain.response.GeminiApiResponse;
 import com.nexora.backend.domain.response.dto.PredictionResponse;
 import com.nexora.backend.model.service.ModelService;
 import com.nexora.backend.util.ResponseUtil;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -37,11 +39,18 @@ public class ModelServiceImpl implements ModelService {
     @Value("${gemini.api.key}")
     private String geminiApiKey;
 
+    @Override
     public ResponseEntity<APIResponse> getGeminiForAdvancedDecision(String prompt) {
+        // Add validation to ensure the prompt is not null or empty.
+        if (prompt == null || prompt.isBlank()) {
+            log.error("Prompt is null or empty.");
+            return responseUtil.wrapError("Prompt cannot be null or empty", "INVALID_ARGUMENT", HttpStatus.BAD_REQUEST);
+        }
+
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Content-Type", "application/json");
-            headers.set("X-goog-api-key", geminiApiKey);
+            headers.set("x-goog-api-key", geminiApiKey);
 
             GeminiApiRequest.Part part = GeminiApiRequest.Part.builder()
                     .text(prompt)
@@ -49,21 +58,46 @@ public class ModelServiceImpl implements ModelService {
 
             GeminiApiRequest.Content content = GeminiApiRequest.Content.builder()
                     .parts(Collections.singletonList(part))
+                    .role("user")
                     .build();
 
             GeminiApiRequest request = GeminiApiRequest.builder()
                     .contents(Collections.singletonList(content))
                     .build();
 
+            // Log the request payload for easier debugging.
+            log.info("Sending request to Gemini API: {}", request);
+
             HttpEntity<GeminiApiRequest> entity = new HttpEntity<>(request, headers);
 
-            ResponseEntity<String> response = restTemplate.postForEntity(geminiApiUrl, entity, String.class);
+            // Expect a GeminiApiResponse object instead of a raw String
+            ResponseEntity<GeminiApiResponse> response = restTemplate.postForEntity(geminiApiUrl, entity, GeminiApiResponse.class);
 
-            log.error(response.getBody());
-            return responseUtil.wrapSuccess(response.getBody(), HttpStatus.OK);
+            GeminiApiResponse responseBody = response.getBody();
 
+            // Robustly check the response structure and extract the generated text
+            if (responseBody != null
+                    && responseBody.getCandidates() != null
+                    && !responseBody.getCandidates().isEmpty()
+                    && responseBody.getCandidates().get(0).getContent() != null
+                    && responseBody.getCandidates().get(0).getContent().getParts() != null
+                    && !responseBody.getCandidates().get(0).getContent().getParts().isEmpty()) {
+
+                String generatedText = responseBody.getCandidates().get(0).getContent().getParts().get(0).getText();
+                log.info("Successfully parsed response from Gemini API.");
+                return responseUtil.wrapSuccess(generatedText.trim(), HttpStatus.OK);
+
+            } else {
+                log.error("Could not parse a valid text part from Gemini API response: {}", responseBody);
+                return responseUtil.wrapError("Could not parse response from Gemini API", "GEMINI_PARSE_ERROR", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+        } catch (HttpClientErrorException e) {
+            log.error("HTTP error communicating with Gemini API: {} - {}", e.getStatusCode(), e.getResponseBodyAsString(), e);
+            return responseUtil.wrapError("Error communicating with Gemini API: " + e.getMessage(), e.getResponseBodyAsString(), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
-            return responseUtil.wrapError("Error communicating with Gemini API", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("An unexpected error occurred while communicating with Gemini API: {}", e.getMessage(), e);
+            return responseUtil.wrapError("An unexpected error occurred", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -92,8 +126,8 @@ public class ModelServiceImpl implements ModelService {
                     employeeDetails.getDailyRate() != null ? employeeDetails.getDailyRate().doubleValue() : null,
                     employeeDetails.getDepartment(),
                     employeeDetails.getDistanceFromHome(),
-                    employeeDetails.getEducation(),          // numeric 1–5
-                    employeeDetails.getEducationField(),     // string like "Life Sciences"
+                    employeeDetails.getEducation(),
+                    employeeDetails.getEducationField(),
                     employeeDetails.getEnvironmentSatisfaction(),
                     employeeDetails.getGender(),
                     employeeDetails.getHourlyRate() != null ? employeeDetails.getHourlyRate().doubleValue() : null,
@@ -129,7 +163,7 @@ public class ModelServiceImpl implements ModelService {
                     .doOnError(error ->
                             log.error("❌ Error fetching prediction for employee {}: {}",
                                     employeeDetails.getEmployeeName(), error.getMessage()))
-                    .block(); // Convert Mono to synchronous call
+                    .block();
 
             if (predictionResponse == null) {
                 log.error("Received null response from prediction service for employee: {}", employeeDetails.getEmployeeName());
@@ -153,38 +187,15 @@ public class ModelServiceImpl implements ModelService {
         }
     }
 
-    /**
-     * Inner record to represent the request body sent to the Python prediction API.
-     */
     private record PredictionRequest(
-            String employee_name,
-            Integer Age,
-            String BusinessTravel,
-            Double DailyRate,
-            String Department,
-            Integer DistanceFromHome,
-            Integer Education,
-            String EducationField,
-            Integer EnvironmentSatisfaction,
-            String Gender,
-            Double HourlyRate,
-            Integer JobInvolvement,
-            Integer JobLevel,
-            String JobRole,
-            Integer JobSatisfaction,
-            String MaritalStatus,
-            Double MonthlyIncome,
-            Double MonthlyRate,
-            Integer NumCompaniesWorked,
-            String OverTime,
-            Integer RelationshipSatisfaction,
-            Integer StockOptionLevel,
-            Integer TotalWorkingYears,
-            Integer TrainingTimesLastYear,
-            Integer WorkLifeBalance,
-            Integer YearsAtCompany,
-            Integer YearsInCurrentRole,
-            Integer YearsSinceLastPromotion,
-            Integer YearsWithCurrManager
+            String employee_name, Integer Age, String BusinessTravel, Double DailyRate,
+            String Department, Integer DistanceFromHome, Integer Education, String EducationField,
+            Integer EnvironmentSatisfaction, String Gender, Double HourlyRate, Integer JobInvolvement,
+            Integer JobLevel, String JobRole, Integer JobSatisfaction, String MaritalStatus,
+            Double MonthlyIncome, Double MonthlyRate, Integer NumCompaniesWorked, String OverTime,
+            Integer RelationshipSatisfaction, Integer StockOptionLevel, Integer TotalWorkingYears,
+            Integer TrainingTimesLastYear, Integer WorkLifeBalance, Integer YearsAtCompany,
+            Integer YearsInCurrentRole, Integer YearsSinceLastPromotion, Integer YearsWithCurrManager
     ) {}
 }
+

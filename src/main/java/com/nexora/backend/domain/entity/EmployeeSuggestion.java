@@ -1,7 +1,10 @@
 package com.nexora.backend.domain.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +18,7 @@ public class EmployeeSuggestion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", updatable = false, nullable = false)
     private Long id;
 
     @Column(name = "first_name", length = 100, columnDefinition = "VARCHAR(100) DEFAULT 'N/A'")
@@ -23,7 +27,7 @@ public class EmployeeSuggestion {
     @Column(name = "last_name", length = 100, columnDefinition = "VARCHAR(100) DEFAULT 'N/A'")
     private String lastName;
 
-    @Column(name = "full_name", length = 200, nullable = false) // Fixed: added length constraint
+    @Column(name = "full_name", length = 200, nullable = false)
     private String fullName;
 
     @Column(name = "department", length = 100, columnDefinition = "VARCHAR(100) DEFAULT 'N/A'")

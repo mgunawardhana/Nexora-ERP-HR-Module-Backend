@@ -3,6 +3,7 @@ package com.nexora.backend.attendence.controller;
 import com.nexora.backend.attendence.service.AttendanceService;
 import com.nexora.backend.domain.request.AttendanceRequest;
 import com.nexora.backend.domain.response.APIResponse;
+import com.nexora.backend.domain.response.SuggestionSaveRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,5 +24,11 @@ public class AttendanceController {
     public ResponseEntity<APIResponse> markAttendance(@RequestBody AttendanceRequest attendanceRequest) {
         log.info("Marking attendance for user: {}", attendanceRequest.getUserId());
         return attendanceService.markDailyAttendance(attendanceRequest);
+    }
+
+
+    @PostMapping("/save-suggestions")
+    public ResponseEntity<APIResponse> saveSuggestions(@RequestBody SuggestionSaveRequest request) {
+        return attendanceService.saveSuggestions(request);
     }
 }

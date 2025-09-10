@@ -1,12 +1,15 @@
 package com.nexora.backend.attendence.service.impl;
 
 import com.nexora.backend.attendence.repository.AttendanceRepository;
+import com.nexora.backend.attendence.repository.SuggestionsRepo;
 import com.nexora.backend.attendence.service.AttendanceService;
 import com.nexora.backend.authentication.repository.UserRepository;
 import com.nexora.backend.domain.entity.Attendance;
+import com.nexora.backend.domain.entity.EmployeeSuggestion;
 import com.nexora.backend.domain.entity.User;
 import com.nexora.backend.domain.request.AttendanceRequest;
 import com.nexora.backend.domain.response.APIResponse;
+import com.nexora.backend.domain.response.SuggestionSaveRequest;
 import com.nexora.backend.util.ResponseUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +30,9 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @NonNull
     private final AttendanceRepository attendanceRepository;
+
+    @NonNull
+    private final SuggestionsRepo suggestionsRepo;
 
     @NonNull
     private final UserRepository userRepository;
@@ -111,5 +117,22 @@ public class AttendanceServiceImpl implements AttendanceService {
             return responseUtil.wrapError("An error occurred while processing attendance", e.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @Override
+    public ResponseEntity<APIResponse> saveSuggestions(SuggestionSaveRequest suggestionSaveRequest) {
+
+        EmployeeSuggestion suggestion = EmployeeSuggestion.builder()
+                .firstName(suggestionSaveRequest.firstName)
+                .lastName(suggestionSaveRequest.lastName)
+                .fullName(suggestionSaveRequest.firstName + " " + suggestionSaveRequest.lastName)
+                .department(suggestionSaveRequest.department)
+                .employeeCode(suggestionSaveRequest.employeeCode)
+                .suggestion(suggestionSaveRequest.suggestion)
+                .build();
+
+        suggestionsRepo.save(suggestion);
+        log.info("Suggestion saved for employee: {} {}", suggestionSaveRequest.firstName, suggestionSaveRequest.lastName);
+        return responseUtil.wrapSuccess("Suggestion saved successfully", HttpStatus.CREATED);
     }
 }
