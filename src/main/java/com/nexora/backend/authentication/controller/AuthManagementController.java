@@ -60,4 +60,10 @@ public class AuthManagementController {
         log.info("Get User By ID: {}", id);
         return authenticationService.findEmployeeById(id);
     }
+
+    @DeleteMapping("/delete-user/{id}")
+    public ResponseEntity<APIResponse> deleteUser(@PathVariable Integer id) {
+        log.info("Delete User By ID: {}", id);
+        return authenticationService.deleteUser(id);
+    }
 }

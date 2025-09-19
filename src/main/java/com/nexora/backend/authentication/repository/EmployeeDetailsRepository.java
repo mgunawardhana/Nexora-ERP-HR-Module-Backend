@@ -15,4 +15,6 @@ public interface EmployeeDetailsRepository extends JpaRepository<EmployeeDetails
 
     @Query("SELECT ed FROM EmployeeDetails ed WHERE ed.user.id = :userId")
     Optional<EmployeeDetails> findByUserId(@Param("userId") Integer userId);
+
+    void deleteByUser(User user);
 }

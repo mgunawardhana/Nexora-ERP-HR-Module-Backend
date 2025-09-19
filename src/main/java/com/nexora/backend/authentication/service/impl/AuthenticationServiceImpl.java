@@ -278,6 +278,33 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
+    @Transactional
+    public ResponseEntity<APIResponse> deleteUser(Integer id) {
+        try {
+            var userOptional = userRepository.findById(id);
+            if (userOptional.isPresent()) {
+                User user = userOptional.get();
+
+                // Delete associated tokens
+                tokenRepository.deleteAllByUser(user);
+
+                // Delete associated employee details
+                employeeDetailsRepository.deleteByUser(user);
+
+                // Delete the user
+                userRepository.delete(user);
+
+                return responseUtil.wrapSuccess("User deleted successfully", HttpStatus.OK);
+            } else {
+                return responseUtil.wrapError("User not found", "No user found with ID: " + id, HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            log.error("Failed to delete user with ID {}: {}", id, e.getMessage(), e);
+            return responseUtil.wrapError("Failed to delete user", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
     public ResponseEntity<APIResponse> findEmployeeById(Integer id) {
         try {
             var employeeDetails = employeeDetailsRepository.findByUserId(id);

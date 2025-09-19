@@ -65,4 +65,12 @@ public interface AuthenticationService {
      * @return a {@link ResponseEntity} containing an {@link APIResponse} with the employee details
      */
     ResponseEntity<APIResponse> findEmployeeById(Integer id);
+
+    /**
+     * Deletes a user by their ID.
+     *
+     * @param id the user ID
+     * @return a {@link ResponseEntity} containing an {@link APIResponse} with the result of the deletion
+     */
+    ResponseEntity<APIResponse> deleteUser(Integer id);
 }

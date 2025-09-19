@@ -1,6 +1,7 @@
 package com.nexora.backend.authentication.repository;
 
 import com.nexora.backend.domain.entity.Token;
+import com.nexora.backend.domain.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -17,4 +18,6 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
     List<Token> findAllValidTokenByUser(Integer id);
 
     Optional<Token> findByToken(String token);
+
+    void deleteAllByUser(User user);
 }
