@@ -116,4 +116,21 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         return responseUtil.wrapSuccess(suggestionsPage.getContent(), HttpStatus.OK);
     }
+
+    @Override
+    public ResponseEntity<APIResponse> deleteSuggestion(Long id) {
+        try {
+            if (suggestionsRepo.existsById(id)) {
+                suggestionsRepo.deleteById(id);
+                log.info("Suggestion with ID: {} deleted successfully", id);
+                return responseUtil.wrapSuccess("Suggestion deleted successfully", HttpStatus.OK);
+            } else {
+                log.warn("Suggestion with ID: {} not found", id);
+                return responseUtil.wrapError("Suggestion not found", "SUGGESTION_NOT_FOUND", HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            log.error("Error deleting suggestion with ID {}: {}", id, e.getMessage(), e);
+            return responseUtil.wrapError("An error occurred while deleting the suggestion", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

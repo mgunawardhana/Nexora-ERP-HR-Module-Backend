@@ -41,4 +41,10 @@ public class AttendanceController {
         return attendanceService.fetchSuggestions(page, size);
     }
 
+    @DeleteMapping("/delete-suggestion/{id}")
+    public ResponseEntity<APIResponse> deleteSuggestion(@PathVariable Long id) {
+        log.info("Deleting suggestion with ID: {}", id);
+        return attendanceService.deleteSuggestion(id);
+    }
+
 }

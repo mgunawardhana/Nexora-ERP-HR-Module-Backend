@@ -12,4 +12,6 @@ public interface AttendanceService {
     ResponseEntity<APIResponse> saveSuggestions(SuggestionSaveRequest suggestionSaveRequest);
 
     ResponseEntity<APIResponse> fetchSuggestions(Integer page, Integer size);
+
+    ResponseEntity<APIResponse> deleteSuggestion(Long id);
 }
