@@ -68,8 +68,8 @@ public class AuthManagementController {
         return authenticationService.deleteUser(id);
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<APIResponse> updateUser(@PathVariable Integer id, @RequestBody UpdateRequest updateRequest) {
+    @PutMapping("/update-user/{id}")
+    public ResponseEntity<APIResponse> updateUser(@PathVariable Integer id, @RequestBody UpdateRequest updateRequest){
         log.info("UpdateRequest for user ID {}: {}", id, updateRequest);
         return authenticationService.updateUser(id, updateRequest);
     }

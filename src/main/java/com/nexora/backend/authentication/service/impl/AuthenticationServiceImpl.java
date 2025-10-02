@@ -98,7 +98,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .lastName(registrationRequest.getLastName())
                     .email(registrationRequest.getEmail())
                     .password(passwordEncoder.encode(registrationRequest.getPassword()))
-                    .role(registrationRequest.getRole())
+                    .role(registrationRequest.getRole() != null ? registrationRequest.getRole() : com.nexora.backend.domain.enums.Role.EMPLOYEE)
                     .build();
 
             log.info("Processing registration for user: {}", user.getEmail());
@@ -320,50 +320,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    @Transactional
     public ResponseEntity<APIResponse> updateUser(Integer id, UpdateRequest updateRequest) {
-        try {
-            User user = userRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-
-            // Update User entity
-            if (updateRequest.getFirstName() != null) {
-                user.setFirstName(updateRequest.getFirstName());
-            }
-            if (updateRequest.getLastName() != null) {
-                user.setLastName(updateRequest.getLastName());
-            }
-            if (updateRequest.getEmail() != null) {
-                user.setEmail(updateRequest.getEmail());
-            }
-            if (updateRequest.getRole() != null) {
-                user.setRole(updateRequest.getRole());
-            }
-
-            userRepository.save(user);
-
-            // Update EmployeeDetails entity
-            EmployeeDetails employeeDetails = employeeDetailsRepository.findByUser(user)
-                    .orElseThrow(() -> new RuntimeException("Employee details not found for user id: " + id));
-
-            if (updateRequest.getDepartment() != null) {
-                employeeDetails.setDepartment(updateRequest.getDepartment());
-            }
-            if (updateRequest.getDesignation() != null) {
-                employeeDetails.setJobRole(updateRequest.getDesignation());
-            }
-            if (updateRequest.getEmploymentStatus() != null) {
-                employeeDetails.setEmploymentStatus(updateRequest.getEmploymentStatus());
-            }
-
-            employeeDetailsRepository.save(employeeDetails);
-
-            return responseUtil.wrapSuccess("User updated successfully", HttpStatus.OK);
-
-        } catch (Exception e) {
-            log.error("Failed to update user with ID {}: {}", id, e.getMessage(), e);
-            return responseUtil.wrapError("Failed to update user", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return null;
     }
 
     @Override
