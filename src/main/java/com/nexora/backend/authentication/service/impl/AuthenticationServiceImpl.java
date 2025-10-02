@@ -75,7 +75,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return responseUtil.wrapError("Failed to retrieve user ID", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
     @Override
     @Transactional
     public AuthenticationResponse register(RegistrationRequest registrationRequest) {
@@ -87,8 +86,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 if (nameParts.length > 1) {
                     registrationRequest.setLastName(nameParts[1]);
                 } else {
-                    // If there is no last name, you might want to set a default or handle it as per your business logic
-                    // For now, we'll set it to a single character to pass the @NotBlank validation
                     registrationRequest.setLastName(".");
                 }
             }

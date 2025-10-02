@@ -31,6 +31,7 @@ public class RegistrationRequest {
     private String employeeCode;
     @JsonProperty("Department")
     private String department;
+    @JsonProperty("JobRole")
     private String designation;
     private LocalDate joinDate;
     private BigDecimal currentSalary;
@@ -47,6 +48,7 @@ public class RegistrationRequest {
     private LocalDate contractEndDate;
     private BigDecimal hourlyRate;
     private String certifications;
+    @JsonProperty("EducationField")
     private String educationLevel;
     private String university;
     private Integer graduationYear;
