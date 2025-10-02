@@ -83,7 +83,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .lastName(registrationRequest.getLastName())
                     .email(registrationRequest.getEmail())
                     .password(passwordEncoder.encode(registrationRequest.getPassword()))
-                    .role(registrationRequest.getRole())
+                    .role(registrationRequest.getRole() != null ? registrationRequest.getRole() : com.nexora.backend.domain.enums.Role.EMPLOYEE)
                     .build();
 
             log.info("Processing registration for user: {}", user.getEmail());
