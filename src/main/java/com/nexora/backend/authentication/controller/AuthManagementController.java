@@ -3,6 +3,7 @@ package com.nexora.backend.authentication.controller;
 import com.nexora.backend.authentication.service.AuthenticationService;
 import com.nexora.backend.domain.request.AuthenticationRequest;
 import com.nexora.backend.domain.request.RegistrationRequest;
+import com.nexora.backend.domain.request.UpdateRequest;
 import com.nexora.backend.domain.response.APIResponse;
 import com.nexora.backend.domain.response.AuthenticationResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -65,5 +66,11 @@ public class AuthManagementController {
     public ResponseEntity<APIResponse> deleteUser(@PathVariable Integer id) {
         log.info("Delete User By ID: {}", id);
         return authenticationService.deleteUser(id);
+    }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<APIResponse> updateUser(@PathVariable Integer id, @RequestBody UpdateRequest updateRequest) {
+        log.info("UpdateRequest for user ID {}: {}", id, updateRequest);
+        return authenticationService.updateUser(id, updateRequest);
     }
 }

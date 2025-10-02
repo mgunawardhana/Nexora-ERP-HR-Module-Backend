@@ -2,6 +2,7 @@ package com.nexora.backend.authentication.service;
 
 import com.nexora.backend.domain.request.AuthenticationRequest;
 import com.nexora.backend.domain.request.RegistrationRequest;
+import com.nexora.backend.domain.request.UpdateRequest;
 import com.nexora.backend.domain.response.APIResponse;
 import com.nexora.backend.domain.response.AuthenticationResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -73,4 +74,13 @@ public interface AuthenticationService {
      * @return a {@link ResponseEntity} containing an {@link APIResponse} with the result of the deletion
      */
     ResponseEntity<APIResponse> deleteUser(Integer id);
+
+        /**
+         * Updates a user's details based on the provided user ID and update request.
+         *
+         * @param id the ID of the user to be updated
+         * @param updateRequest the request object containing the updated user details
+         * @return a {@link ResponseEntity} containing an {@link APIResponse} with the result of the update operation
+         */
+        ResponseEntity<APIResponse> updateUser(Integer id, UpdateRequest updateRequest);
 }

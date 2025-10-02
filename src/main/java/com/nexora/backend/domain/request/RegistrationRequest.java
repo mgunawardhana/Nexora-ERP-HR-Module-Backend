@@ -1,6 +1,7 @@
 package com.nexora.backend.domain.request;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nexora.backend.domain.enums.EmploymentStatus;
 import com.nexora.backend.domain.enums.Role;
 import com.nexora.backend.domain.enums.WorkMode;
@@ -18,6 +19,8 @@ import java.time.LocalDate;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RegistrationRequest {
     private Role role;
+    @JsonProperty("employee_name")
+    private String employeeName;
     private String firstName;
     private String lastName;
     private String email;
@@ -26,6 +29,7 @@ public class RegistrationRequest {
     private String nationalId;
     private String phoneNumber;
     private String employeeCode;
+    @JsonProperty("Department")
     private String department;
     private String designation;
     private LocalDate joinDate;

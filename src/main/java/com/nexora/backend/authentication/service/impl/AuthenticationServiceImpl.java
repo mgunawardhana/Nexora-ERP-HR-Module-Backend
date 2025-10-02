@@ -11,6 +11,7 @@ import com.nexora.backend.domain.entity.User;
 import com.nexora.backend.domain.enums.TokenType;
 import com.nexora.backend.domain.request.AuthenticationRequest;
 import com.nexora.backend.domain.request.RegistrationRequest;
+import com.nexora.backend.domain.request.UpdateRequest;
 import com.nexora.backend.domain.response.APIResponse;
 import com.nexora.backend.domain.response.AuthenticationResponse;
 import com.nexora.backend.util.ResponseUtil;
@@ -31,6 +32,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -78,12 +80,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Transactional
     public AuthenticationResponse register(RegistrationRequest registrationRequest) {
         try {
+            // Handle splitting of employeeName to firstName and lastName
+            if (StringUtils.hasText(registrationRequest.getEmployeeName())) {
+                String[] nameParts = registrationRequest.getEmployeeName().split(" ", 2);
+                registrationRequest.setFirstName(nameParts[0]);
+                if (nameParts.length > 1) {
+                    registrationRequest.setLastName(nameParts[1]);
+                } else {
+                    // If there is no last name, you might want to set a default or handle it as per your business logic
+                    // For now, we'll set it to a single character to pass the @NotBlank validation
+                    registrationRequest.setLastName(".");
+                }
+            }
+
             User user = User.builder()
                     .firstName(registrationRequest.getFirstName())
                     .lastName(registrationRequest.getLastName())
                     .email(registrationRequest.getEmail())
                     .password(passwordEncoder.encode(registrationRequest.getPassword()))
-                    .role(registrationRequest.getRole() != null ? registrationRequest.getRole() : com.nexora.backend.domain.enums.Role.EMPLOYEE)
+                    .role(registrationRequest.getRole())
                     .build();
 
             log.info("Processing registration for user: {}", user.getEmail());
@@ -151,24 +166,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-                public AuthenticationResponse authenticate(AuthenticationRequest request) {
-                    authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+    public AuthenticationResponse authenticate(AuthenticationRequest request) {
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
-                    var user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new RuntimeException("User not found"));
-                    var accessToken = jwtServiceImpl.generateToken(user);
-                    var refreshToken = jwtServiceImpl.generateRefreshToken(user);
+        var user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new RuntimeException("User not found"));
+        var accessToken = jwtServiceImpl.generateToken(user);
+        var refreshToken = jwtServiceImpl.generateRefreshToken(user);
 
-                    revokeAllUserTokens(user);
-                    saveUserToken(user, accessToken);
+        revokeAllUserTokens(user);
+        saveUserToken(user, accessToken);
 
-                    return AuthenticationResponse.builder()
-                            .accessToken(accessToken)
-                            .refreshToken(refreshToken)
-                            .userName(user.getFirstName() + " " + user.getLastName())
-                            .email(user.getEmail())
-                            .role(String.valueOf(user.getRole()))
-                            .build();
-                }
+        return AuthenticationResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .userName(user.getFirstName() + " " + user.getLastName())
+                .email(user.getEmail())
+                .role(String.valueOf(user.getRole()))
+                .build();
+    }
 
     @Override
     public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -301,6 +316,53 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         } catch (Exception e) {
             log.error("Failed to delete user with ID {}: {}", id, e.getMessage(), e);
             return responseUtil.wrapError("Failed to delete user", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<APIResponse> updateUser(Integer id, UpdateRequest updateRequest) {
+        try {
+            User user = userRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+            // Update User entity
+            if (updateRequest.getFirstName() != null) {
+                user.setFirstName(updateRequest.getFirstName());
+            }
+            if (updateRequest.getLastName() != null) {
+                user.setLastName(updateRequest.getLastName());
+            }
+            if (updateRequest.getEmail() != null) {
+                user.setEmail(updateRequest.getEmail());
+            }
+            if (updateRequest.getRole() != null) {
+                user.setRole(updateRequest.getRole());
+            }
+
+            userRepository.save(user);
+
+            // Update EmployeeDetails entity
+            EmployeeDetails employeeDetails = employeeDetailsRepository.findByUser(user)
+                    .orElseThrow(() -> new RuntimeException("Employee details not found for user id: " + id));
+
+            if (updateRequest.getDepartment() != null) {
+                employeeDetails.setDepartment(updateRequest.getDepartment());
+            }
+            if (updateRequest.getDesignation() != null) {
+                employeeDetails.setJobRole(updateRequest.getDesignation());
+            }
+            if (updateRequest.getEmploymentStatus() != null) {
+                employeeDetails.setEmploymentStatus(updateRequest.getEmploymentStatus());
+            }
+
+            employeeDetailsRepository.save(employeeDetails);
+
+            return responseUtil.wrapSuccess("User updated successfully", HttpStatus.OK);
+
+        } catch (Exception e) {
+            log.error("Failed to update user with ID {}: {}", id, e.getMessage(), e);
+            return responseUtil.wrapError("Failed to update user", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
