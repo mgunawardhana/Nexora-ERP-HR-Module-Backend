@@ -154,6 +154,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .accessToken(accessToken)
                     .refreshToken(refreshToken)
                     .userName(savedUser.getFirstName())
+                    .email(savedUser.getEmail())
                     .role(String.valueOf(savedUser.getRole()))
                     .build();
         } catch (Exception e) {
@@ -317,8 +318,63 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
+    @Transactional
     public ResponseEntity<APIResponse> updateUser(Integer id, UpdateRequest updateRequest) {
-        return null;
+        try {
+            User user = userRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+            // Handle splitting of employeeName to firstName and lastName
+            if (StringUtils.hasText(updateRequest.getEmployeeName())) {
+                String[] nameParts = updateRequest.getEmployeeName().split(" ", 2);
+                updateRequest.setFirstName(nameParts[0]);
+                if (nameParts.length > 1) {
+                    updateRequest.setLastName(nameParts[1]);
+                }
+            }
+
+            // Update User entity
+            if (updateRequest.getFirstName() != null) {
+                user.setFirstName(updateRequest.getFirstName());
+            }
+            if (updateRequest.getLastName() != null) {
+                user.setLastName(updateRequest.getLastName());
+            }
+            if (updateRequest.getEmail() != null) {
+                user.setEmail(updateRequest.getEmail());
+            }
+            if (updateRequest.getRole() != null) {
+                user.setRole(updateRequest.getRole());
+            }
+
+            userRepository.save(user);
+
+            // Update EmployeeDetails entity
+            EmployeeDetails employeeDetails = employeeDetailsRepository.findByUser(user)
+                    .orElseThrow(() -> new RuntimeException("Employee details not found for user id: " + id));
+
+            // Combine first and last name for employeeName field in EmployeeDetails
+            if (updateRequest.getFirstName() != null || updateRequest.getLastName() != null) {
+                employeeDetails.setEmployeeName(user.getFirstName() + " " + user.getLastName());
+            }
+            if (updateRequest.getDepartment() != null) {
+                employeeDetails.setDepartment(updateRequest.getDepartment());
+            }
+            if (updateRequest.getDesignation() != null) {
+                employeeDetails.setJobRole(updateRequest.getDesignation());
+            }
+            if (updateRequest.getEmploymentStatus() != null) {
+                employeeDetails.setEmploymentStatus(updateRequest.getEmploymentStatus());
+            }
+
+            employeeDetailsRepository.save(employeeDetails);
+
+            return responseUtil.wrapSuccess("User updated successfully", HttpStatus.OK);
+
+        } catch (Exception e) {
+            log.error("Failed to update user with ID {}: {}", id, e.getMessage(), e);
+            return responseUtil.wrapError("Failed to update user", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @Override
