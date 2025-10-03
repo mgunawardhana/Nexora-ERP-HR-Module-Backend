@@ -47,6 +47,7 @@ public class SecurityConfig {
             "/api/gemini/**",
             "/api/v1/suggestions/**",
             "/api/v1/model**",
+            "/api/v1/model/**",
             "/api/v1/model/gemini-for/advanced/decision"
     };
     private final JwtAuthenticationFilter jwtAuthFilter;

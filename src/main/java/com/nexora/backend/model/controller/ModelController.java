@@ -23,4 +23,9 @@ public class ModelController {
     public ResponseEntity<APIResponse> getGeminiForAdvancedDecision(@RequestParam("prompt") String prompt) {
         return modelService.getGeminiForAdvancedDecision(prompt);
     }
+
+    @GetMapping("/top-5-kpi")
+    public ResponseEntity<APIResponse> getTop5KpiEmployees() {
+        return modelService.getTop5KpiEmployees();
+    }
 }

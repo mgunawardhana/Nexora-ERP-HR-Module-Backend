@@ -1,7 +1,9 @@
 package com.nexora.backend.model.service.impl;
 
+import com.nexora.backend.analytics.repository.EmployeeKpiRecordRepository;
 import com.nexora.backend.authentication.repository.EmployeeDetailsRepository;
 import com.nexora.backend.domain.entity.EmployeeDetails;
+import com.nexora.backend.domain.entity.EmployeeKpiRecord;
 import com.nexora.backend.domain.request.GeminiApiRequest;
 import com.nexora.backend.domain.response.APIResponse;
 import com.nexora.backend.domain.response.GeminiApiResponse;
@@ -21,6 +23,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -29,6 +32,7 @@ import java.util.Optional;
 public class ModelServiceImpl implements ModelService {
 
     private final EmployeeDetailsRepository employeeDetailsRepository;
+    private final EmployeeKpiRecordRepository employeeKpiRecordRepository;
     private final WebClient webClient;
     private final ResponseUtil responseUtil;
     private final RestTemplate restTemplate;
@@ -38,6 +42,18 @@ public class ModelServiceImpl implements ModelService {
 
     @Value("${gemini.api.key}")
     private String geminiApiKey;
+
+    @Override
+    public ResponseEntity<APIResponse> getTop5KpiEmployees() {
+        try {
+            List<EmployeeKpiRecord> top5Employees = employeeKpiRecordRepository.findTop5ByOrderByMonthlyKpiDesc();
+            System.out.println(top5Employees);
+            return responseUtil.wrapSuccess(top5Employees, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("An unexpected error occurred while fetching top 5 KPI employees: {}", e.getMessage(), e);
+            return responseUtil.wrapError("An unexpected error occurred", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
     @Override
     public ResponseEntity<APIResponse> getGeminiForAdvancedDecision(String prompt) {
@@ -198,4 +214,3 @@ public class ModelServiceImpl implements ModelService {
             Integer YearsInCurrentRole, Integer YearsSinceLastPromotion, Integer YearsWithCurrManager
     ) {}
 }
-

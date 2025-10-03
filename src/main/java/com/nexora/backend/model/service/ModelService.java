@@ -8,4 +8,6 @@ public interface ModelService {
     ResponseEntity<APIResponse> getPredictionForEmployee(Integer userId);
 
     ResponseEntity<APIResponse> getGeminiForAdvancedDecision(String prompt);
+
+    ResponseEntity<APIResponse> getTop5KpiEmployees();
 }
