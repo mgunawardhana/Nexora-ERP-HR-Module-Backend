@@ -8,5 +8,6 @@ public enum EmploymentStatus {
     TERMINATED,
     RESIGNED,
     ON_LEAVE,
-    PERMANENT
+    PERMANENT,
+    WFH
 }
